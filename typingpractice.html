@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>打字練習系統</title>
+    <style>
+        body { font-family: 'Microsoft JhengHei', sans-serif; text-align: center; background: #f4f7f6; margin: 0; padding: 20px; }
+        
+        /* 頂部導覽列 */
+        .nav-bar { margin-bottom: 20px; }
+        .nav-btn { font-size: 18px; padding: 10px 20px; margin: 0 5px; cursor: pointer; border: none; border-radius: 8px; background: #ddd; }
+        .nav-btn.active { background: #007bff; color: white; }
+        
+        /* 控制選項 */
+        .controls { margin-bottom: 20px; font-size: 18px; }
+        .controls select, .controls label { margin: 0 10px; padding: 5px; }
+
+        /* 題目顯示區 */
+        .display-area { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; display: inline-block; min-width: 60%; }
+        #target-word { font-size: 60px; font-weight: bold; margin-right: 20px; }
+        .speaker-btn { font-size: 30px; cursor: pointer; background: none; border: none; vertical-align: middle; }
+
+        /* 歷程顯示區 */
+        .history-area { font-size: 32px; color: #007bff; min-height: 50px; margin-bottom: 20px; letter-spacing: 5px; font-weight: bold; }
+
+        /* 虛擬鍵盤 */
+        .keyboard { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .key-row { display: flex; gap: 8px; }
+        .key { 
+            width: 60px; height: 60px; background: white; border-radius: 8px; 
+            border: 1px solid #ccc; box-shadow: 0 4px #aaa;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            font-size: 20px; user-select: none; cursor: pointer;
+        }
+        .key:active { transform: translateY(4px); box-shadow: 0 0 #aaa; }
+        .key.space { width: 350px; flex-direction: row; font-size: 24px; }
+        
+        /* 鍵盤顯示切換 */
+        .show-zh .en { display: none; }
+        .show-en .zh { display: none; }
+    </style>
+</head>
+<body class="show-all">
+
+    <div class="nav-bar">
+        <button class="nav-btn active" onclick="switchMode('bopomofo')">1. 注音單字練習</button>
+        <button class="nav-btn" onclick="switchMode('chinese')">2. 中文語詞練習</button>
+        <button class="nav-btn" onclick="switchMode('english')">3. 英文打字</button>
+    </div>
+
+    <div class="controls">
+        <span id="difficulty-selector" style="display:none;">
+            難度：
+            <select id="level">
+                <option value="low">低 (一、二年級)</option>
+                <option value="medium">中 (三、四年級)</option>
+                <option value="high">高 (五、六年級)</option>
+            </select>
+        </span>
+        <select id="keyboard-view" onchange="document.body.className = this.value">
+            <option value="show-all">顯示全部按鍵</option>
+            <option value="show-zh">僅顯示注音</option>
+            <option value="show-en">僅顯示英文</option>
+        </select>
+        <label><input type="checkbox" id="auto-read" checked> 開啟報讀</label>
+    </div>
+
+    <div class="display-area">
+        <span id="target-word">開始練習</span>
+        <button class="speaker-btn" onclick="speakTarget()">🔊</button>
+    </div>
+    
+    <div id="history-area" class="history-area"></div>
+
+    <!-- 鍵盤區 (此處為範例，需依照您的圖片擴充完整鍵盤) -->
+    <div class="keyboard" id="virtual-keyboard">
+        <div class="key-row">
+            <div class="key" onclick="typeKey('ㄅ', '1')"><span class="en">1</span><span class="zh">ㄅ</span></div>
+            <div class="key" onclick="typeKey('ㄉ', '2')"><span class="en">2</span><span class="zh">ㄉ</span></div>
+            <div class="key" onclick="typeKey('ˇ', '3')"><span class="en">3</span><span class="zh">ˇ</span></div>
+            <div class="key" onclick="typeKey('ˋ', '4')"><span class="en">4</span><span class="zh">ˋ</span></div>
+            <div class="key" onclick="typeKey('ㄓ', '5')"><span class="en">5</span><span class="zh">ㄓ</span></div>
+            <div class="key" onclick="typeKey('ˊ', '6')"><span class="en">6</span><span class="zh">ˊ</span></div>
+            <div class="key" onclick="typeKey('˙', '7')"><span class="en">7</span><span class="zh">˙</span></div>
+            <div class="key" onclick="typeKey('ㄚ', '8')"><span class="en">8</span><span class="zh">ㄚ</span></div>
+        </div>
+        <div class="key-row">
+            <div class="key space" onclick="typeKey('空白鍵', 'Space')">
+                <span class="zh">空白 (一聲)</span>
+                <span class="en">Space</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = 'bopomofo';
+        let inputHistory = [];
+        
+        // 假題庫 (後續可替換為完整資料)
+        const mockData = {
+            bopomofo: ['ㄅ', 'ㄆ', 'ㄇ', 'ㄈ', 'ㄉ', 'ㄊ'],
+            chinese: {
+                low: ['天空', '白雲', '小狗'],
+                medium: ['學校', '老師', '同學'],
+                high: ['實驗', '觀察', '報告']
+            },
+            english: ['apple', 'banana', 'cat', 'dog']
+        };
+
+        function switchMode(mode) {
+            currentMode = mode;
+            inputHistory = [];
+            document.getElementById('history-area').innerText = '';
+            
+            // 更新按鈕樣式
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // 顯示/隱藏難度選單
+            document.getElementById('difficulty-selector').style.display = (mode === 'chinese') ? 'inline' : 'none';
+
+            nextQuestion();
+        }
+
+        function nextQuestion() {
+            let target = "";
+            if (currentMode === 'bopomofo') {
+                target = mockData.bopomofo[Math.floor(Math.random() * mockData.bopomofo.length)];
+            } else if (currentMode === 'chinese') {
+                let lvl = document.getElementById('level').value;
+                target = mockData.chinese[lvl][Math.floor(Math.random() * mockData.chinese[lvl].length)];
+            } else if (currentMode === 'english') {
+                target = mockData.english[Math.floor(Math.random() * mockData.english.length)];
+            }
+            
+            document.getElementById('target-word').innerText = target;
+            inputHistory = [];
+            document.getElementById('history-area').innerText = '';
+
+            if (document.getElementById('auto-read').checked) {
+                speakTarget();
+            }
+        }
+
+        function speakTarget() {
+            let text = document.getElementById('target-word').innerText;
+            // 聲調特例處理
+            if(text === '空白鍵') text = '一聲';
+            if(text === 'ˊ') text = '二聲';
+            if(text === 'ˇ') text = '三聲';
+            if(text === 'ˋ') text = '四聲';
+            if(text === '˙') text = '輕聲';
+
+            let msg = new SpeechSynthesisUtterance(text);
+            msg.lang = (currentMode === 'english') ? 'en-US' : 'zh-TW';
+            msg.rate = 0.85; // 稍慢的語速
+            window.speechSynthesis.speak(msg);
+        }
+
+        function typeKey(zhChar, enChar) {
+            let viewMode = document.getElementById('keyboard-view').value;
+            let typed = zhChar; // 預設紀錄注音
+
+            if (currentMode === 'english' || viewMode === 'show-en') {
+                typed = enChar;
+            }
+
+            inputHistory.push(typed);
+            document.getElementById('history-area').innerText = inputHistory.join(' ');
+        }
+    </script>
+</body>
+</html>
