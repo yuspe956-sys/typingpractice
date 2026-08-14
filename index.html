@@ -2,478 +2,320 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>打字練習系統</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>注音與語詞輸入測驗系統</title>
     <style>
-        :root {
-            --bg-color: #f0f4f8;
-            --primary-color: #007bff;
-            --key-bg: #ffffff;
-            --key-border: #d1d9e6;
-            --key-shadow: #b3c0d1;
-            --text-main: #333;
-        }
-
-        /* 鎖定畫面，防止平板上下滑動誤觸 */
-        html, body {
-            height: 100vh; width: 100vw; margin: 0; padding: 0;
-            overflow: hidden; background: var(--bg-color);
+        body {
             font-family: 'Microsoft JhengHei', sans-serif;
-            color: var(--text-main);
-            touch-action: manipulation; overscroll-behavior: none;
-            display: flex; flex-direction: column;
+            background-color: #f4f7f6;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 { color: #2c3e50; }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        /* 選單與按鈕 */
+        .menu { margin-bottom: 20px; }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #3498db;
+            color: white;
+            transition: 0.3s;
+        }
+        button:hover { background-color: #2980b9; }
+        .btn-active { background-color: #e74c3c !important; }
+        
+        /* 遊戲區域 */
+        #game-area { display: none; margin-top: 20px; }
+        .question-box {
+            font-size: 48px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 20px 0;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+        }
+        .progress {
+            font-size: 18px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        
+        /* 輸入歷程與提示 */
+        .history-box {
+            font-size: 24px;
+            color: #e67e22;
+            min-height: 40px;
+            margin: 15px 0;
+            letter-spacing: 2px;
+        }
+        .instruction {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 20px;
         }
 
-        .screen { display: none; flex-direction: column; height: 100%; }
-        .screen.active { display: flex; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* 主畫面與結算畫面 */
-        .center-container { margin: auto; text-align: center; width: 90%; max-width: 600px; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .main-title { font-size: 36px; font-weight: bold; margin-bottom: 20px; color: var(--primary-color); }
-        .mode-btn { font-size: 20px; padding: 12px 20px; margin: 8px; cursor: pointer; border: none; border-radius: 8px; background: #eef2f7; box-shadow: 0 2px 4px rgba(0,0,0,0.1); width: 80%; transition: 0.2s;}
-        .mode-btn:active { transform: translateY(2px); box-shadow: none; }
-        .mode-btn.special { background: #d4edda; border: 2px solid #28a745; font-weight: bold;}
-
-        /* 遊戲區塊佈局 */
-        .header-info { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 16px; font-weight: bold;}
-        .btn-small { padding: 6px 12px; border-radius: 6px; border: none; background: #e0e0e0; font-size: 14px; font-weight: bold; cursor: pointer;}
-        
-        .display-area { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 10px; text-align: center; overflow-y: auto; position: relative;}
-        
-        /* 一般模式題目 */
-        #target-word { font-size: 55px; font-weight: bold; letter-spacing: 2px; }
-        
-        /* 短文模式 */
-        .article-box { font-size: 32px; line-height: 1.6; font-weight: bold; max-width: 95%; margin-bottom: 10px; text-align: left; padding: 15px; background: white; border-radius: 10px; box-shadow: inset 0 0 10px rgba(0,0,0,0.05);}
-        .char-normal { color: #aaa; } 
-        .char-target { color: #d93025; border: 3px solid #d93025; padding: 0 2px; border-radius: 6px; background: #fce8e6; } 
-        .char-future { color: #333; }
-
-        /* 歷程與回饋 */
-        .history-area { font-size: 24px; color: var(--primary-color); height: 35px; margin-top: 10px; letter-spacing: 2px; font-weight: bold; background: #fff; padding: 5px 20px; border-radius: 8px; border: 2px dashed var(--primary-color); min-width: 200px; display: flex; align-items: center; justify-content: center;}
-        #feedback-msg { position: absolute; top: 10px; right: 20px; font-size: 20px; font-weight: bold; opacity: 0; transition: 0.2s; }
-
-        /* 鍵盤區 */
-        .keyboard { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: space-between; padding: 6px; background: #eef2f7; border-top: 2px solid #ccc; max-height: 45vh;}
-        .key-row { display: flex; flex: 1; gap: 4px; justify-content: center; margin-bottom: 4px; }
-        .key { 
-            flex: 1; background: var(--key-bg); border-radius: 6px; 
-            border: 1px solid var(--key-border); box-shadow: 0 3px var(--key-shadow);
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            font-size: 18px; user-select: none; cursor: pointer; height: 50px;
+        /* 虛擬鍵盤 */
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-top: 20px;
+            align-items: center;
         }
-        .key:active { transform: translateY(2px); box-shadow: 0 0 var(--key-shadow); }
-        
-        .key.fn-key { font-size: 14px; background: #e2e6ea; }
-        .key.backspace { flex: 1.5; background: #ffe6e6; } 
-        .key.enter { flex: 1.5; background: #d4edda; font-weight: bold; color: #155724; }
-        .key.shift { flex: 2; transition: 0.2s; }
-        .key.shift.active { background: #ffc107; color: black; font-weight: bold; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); transform: translateY(2px); } 
-        .key.space { flex: 5; font-size: 18px; }
-        .key.wrong-btn { flex: 1.5; background: #f8d7da; color: #721c24; } 
-
-        .show-zh .en { display: none; }
-        .show-en .zh { display: none; }
-        .show-all .en { font-size: 12px; color: #666; margin-bottom: 2px; }
-        .show-all .zh { font-size: 18px; font-weight: bold; }
+        .key-row {
+            display: flex;
+            gap: 5px;
+            justify-content: center;
+        }
+        .key {
+            width: 40px;
+            height: 40px;
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+        /* 標示聲調按鍵 */
+        .key-tone {
+            background-color: #f39c12;
+            color: white;
+            border-color: #e67e22;
+        }
+        .key-space {
+            width: 250px;
+            background-color: #f39c12;
+            color: white;
+        }
+        .tone-label { font-size: 10px; opacity: 0.8; }
     </style>
 </head>
-<body class="show-all">
+<body>
 
-    <!-- 1. 首頁 -->
-    <div id="home-screen" class="screen active">
-        <div class="center-container">
-            <div class="main-title">打字練習系統</div>
-            <button class="mode-btn" onclick="startGame('bopomofo')">1. 注音單字 (10題)</button>
-            <button class="mode-btn" onclick="startGame('chinese')">2. 中文語詞 (10題)</button>
-            <button class="mode-btn" onclick="startGame('english')">3. 英文打字 (10題)</button>
-            <hr style="margin: 20px 0; border: 1px solid #ddd;">
-            <div style="margin-bottom: 10px; font-weight: bold;">進階：短文練習 (自動跳字)</div>
-            <select id="article-level" style="font-size:18px; padding:5px; margin-bottom: 10px;">
-                <option value="1">一年級 (魔術師)</option>
-                <option value="2">二年級 (天空是我家)</option>
-                <option value="3">三年級 (陶罐和鐵罐)</option>
-                <option value="4">四年級 (應該讓大家都知道)</option>
-                <option value="5">五年級 (你自己決定吧)</option>
-                <option value="6">六年級 (愛美是天性)</option>
-            </select><br>
-            <button class="mode-btn special" onclick="startGame('article')">開始短文練習</button>
+<div class="container">
+    <h1>📝 注音與語詞輸入測驗</h1>
+    
+    <div class="menu" id="main-menu">
+        <h3>選擇測驗類型</h3>
+        <div>
+            <p>【注音符號練習】</p>
+            <button onclick="startGame('bopomofo', 'initials')">聲母</button>
+            <button onclick="startGame('bopomofo', 'finals')">韻母</button>
+            <button onclick="startGame('bopomofo', 'tones')">聲調</button>
+            <button onclick="startGame('bopomofo', 'all')">全部混合</button>
+        </div>
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <div>
+            <p>【國語語詞練習 (千字題庫)】</p>
+            <button onclick="startGame('vocab', 'low')">低年級 (一、二)</button>
+            <button onclick="startGame('vocab', 'mid')">中年級 (三、四)</button>
+            <button onclick="startGame('vocab', 'high')">高年級 (五、六)</button>
         </div>
     </div>
 
-    <!-- 2. 遊戲畫面 -->
-    <div id="game-screen" class="screen">
-        <div class="header-info">
-            <button class="btn-small" onclick="returnToHome()">⬅ 返回</button>
-            <div id="progress-text">進度: 0/10</div>
-            <div id="timer-text">00:00</div>
-            <div id="score-text">⭕:0 | ❌:0</div>
-        </div>
+    <div id="game-area">
+        <div class="progress" id="progress-text">第 1 / 10 題</div>
+        <div class="question-box" id="question-display">題目</div>
+        
+        <div class="instruction">請直接使用鍵盤輸入，系統會自動比對。</div>
+        <div class="history-box" id="input-history">目前輸入：</div>
+        
+        <button onclick="resetGame()" style="background-color: #95a5a6;">返回主選單</button>
 
-        <div class="display-area">
-            <span id="feedback-msg">正確！</span>
-            
-            <!-- 短文顯示區 -->
-            <div id="article-display" class="article-box" style="display:none;"></div>
-            
-            <!-- 1~3模式顯示區 -->
-            <div id="word-display" style="display:none;">
-                <span id="target-word"></span>
-                <button onclick="speakTarget()" style="font-size:30px; background:none; border:none; cursor:pointer;">🔊</button>
-            </div>
-            
-            <div id="history-area" class="history-area"></div>
-            <div id="hint-text" style="color:#888; font-size:13px; margin-top:5px; display:none;">(逗號：Shift + , | 句號：` + .)</div>
-        </div>
-
-        <!-- 虛擬鍵盤 -->
+        <!-- 虛擬鍵盤 (主要用來視覺提示聲調位置) -->
         <div class="keyboard" id="virtual-keyboard">
             <div class="key-row">
-                <div class="key fn-key" onclick="typeKey('`', '`')"><span class="en">`</span><span class="zh">`</span></div>
-                <div class="key" onclick="typeKey('ㄅ', '1')"><span class="en">1</span><span class="zh">ㄅ</span></div>
-                <div class="key" onclick="typeKey('ㄉ', '2')"><span class="en">2</span><span class="zh">ㄉ</span></div>
-                <div class="key" onclick="typeKey('ˇ', '3')"><span class="en">3</span><span class="zh">ˇ</span></div>
-                <div class="key" onclick="typeKey('ˋ', '4')"><span class="en">4</span><span class="zh">ˋ</span></div>
-                <div class="key" onclick="typeKey('ㄓ', '5')"><span class="en">5</span><span class="zh">ㄓ</span></div>
-                <div class="key" onclick="typeKey('ˊ', '6')"><span class="en">6</span><span class="zh">ˊ</span></div>
-                <div class="key" onclick="typeKey('˙', '7')"><span class="en">7</span><span class="zh">˙</span></div>
-                <div class="key" onclick="typeKey('ㄚ', '8')"><span class="en">8</span><span class="zh">ㄚ</span></div>
-                <div class="key" onclick="typeKey('ㄞ', '9')"><span class="en">9</span><span class="zh">ㄞ</span></div>
-                <div class="key" onclick="typeKey('ㄢ', '0')"><span class="en">0</span><span class="zh">ㄢ</span></div>
-                <div class="key fn-key backspace" onclick="backspace()"><span class="zh">清除</span><span class="en">Bksp</span></div>
+                <div class="key">1</div>
+                <div class="key">2</div>
+                <div class="key key-tone">3<br><span class="tone-label">三聲ˇ</span></div>
+                <div class="key key-tone">4<br><span class="tone-label">四聲ˋ</span></div>
+                <div class="key">5</div>
+                <div class="key key-tone">6<br><span class="tone-label">二聲ˊ</span></div>
+                <div class="key key-tone">7<br><span class="tone-label">輕聲˙</span></div>
+                <div class="key">8</div>
+                <div class="key">9</div>
+                <div class="key">0</div>
             </div>
             <div class="key-row">
-                <div class="key fn-key" style="flex:0.5">Tab</div>
-                <div class="key" onclick="typeKey('ㄆ', 'Q')"><span class="en">Q</span><span class="zh">ㄆ</span></div>
-                <div class="key" onclick="typeKey('ㄊ', 'W')"><span class="en">W</span><span class="zh">ㄊ</span></div>
-                <div class="key" onclick="typeKey('ㄍ', 'E')"><span class="en">E</span><span class="zh">ㄍ</span></div>
-                <div class="key" onclick="typeKey('ㄐ', 'R')"><span class="en">R</span><span class="zh">ㄐ</span></div>
-                <div class="key" onclick="typeKey('ㄔ', 'T')"><span class="en">T</span><span class="zh">ㄔ</span></div>
-                <div class="key" onclick="typeKey('ㄗ', 'Y')"><span class="en">Y</span><span class="zh">ㄗ</span></div>
-                <div class="key" onclick="typeKey('ㄧ', 'U')"><span class="en">U</span><span class="zh">ㄧ</span></div>
-                <div class="key" onclick="typeKey('ㄛ', 'I')"><span class="en">I</span><span class="zh">ㄛ</span></div>
-                <div class="key" onclick="typeKey('ㄟ', 'O')"><span class="en">O</span><span class="zh">ㄟ</span></div>
-                <div class="key" onclick="typeKey('ㄣ', 'P')"><span class="en">P</span><span class="zh">ㄣ</span></div>
-                <div class="key fn-key" style="flex:0.5">]</div>
-            </div>
-            <div class="key-row">
-                <div class="key fn-key" style="flex:0.8">Caps</div>
-                <div class="key" onclick="typeKey('ㄇ', 'A')"><span class="en">A</span><span class="zh">ㄇ</span></div>
-                <div class="key" onclick="typeKey('ㄋ', 'S')"><span class="en">S</span><span class="zh">ㄋ</span></div>
-                <div class="key" onclick="typeKey('ㄎ', 'D')"><span class="en">D</span><span class="zh">ㄎ</span></div>
-                <div class="key" onclick="typeKey('ㄑ', 'F')"><span class="en">F</span><span class="zh">ㄑ</span></div>
-                <div class="key" onclick="typeKey('ㄕ', 'G')"><span class="en">G</span><span class="zh">ㄕ</span></div>
-                <div class="key" onclick="typeKey('ㄘ', 'H')"><span class="en">H</span><span class="zh">ㄘ</span></div>
-                <div class="key" onclick="typeKey('ㄨ', 'J')"><span class="en">J</span><span class="zh">ㄨ</span></div>
-                <div class="key" onclick="typeKey('ㄜ', 'K')"><span class="en">K</span><span class="zh">ㄜ</span></div>
-                <div class="key" onclick="typeKey('ㄠ', 'L')"><span class="en">L</span><span class="zh">ㄠ</span></div>
-                <div class="key" onclick="typeKey('ㄤ', ';')"><span class="en">;</span><span class="zh">ㄤ</span></div>
-                <div class="key fn-key enter" onclick="checkAnswer()">確認(Enter)</div>
-            </div>
-            <div class="key-row">
-                <div class="key fn-key shift" id="shift-btn" onclick="toggleShift()">Shift(中/英)</div>
-                <div class="key" onclick="typeKey('ㄈ', 'Z')"><span class="en">Z</span><span class="zh">ㄈ</span></div>
-                <div class="key" onclick="typeKey('ㄌ', 'X')"><span class="en">X</span><span class="zh">ㄌ</span></div>
-                <div class="key" onclick="typeKey('ㄏ', 'C')"><span class="en">C</span><span class="zh">ㄏ</span></div>
-                <div class="key" onclick="typeKey('ㄒ', 'V')"><span class="en">V</span><span class="zh">ㄒ</span></div>
-                <div class="key" onclick="typeKey('ㄖ', 'B')"><span class="en">B</span><span class="zh">ㄖ</span></div>
-                <div class="key" onclick="typeKey('ㄙ', 'N')"><span class="en">N</span><span class="zh">ㄙ</span></div>
-                <div class="key" onclick="typeKey('ㄩ', 'M')"><span class="en">M</span><span class="zh">ㄩ</span></div>
-                <div class="key" onclick="typeKey('ㄝ', ',')"><span class="en">,</span><span class="zh">ㄝ</span></div>
-                <div class="key" onclick="typeKey('ㄡ', '.')"><span class="en">.</span><span class="zh">ㄡ</span></div>
-                <div class="key" onclick="typeKey('ㄥ', '/')"><span class="en">/</span><span class="zh">ㄥ</span></div>
-            </div>
-            <div class="key-row">
-                <div class="key fn-key wrong-btn" onclick="markAsWrong()">跳過/不會</div>
-                <div class="key space" onclick="typeKey('空白鍵', ' ')"><span class="zh">空白 (一聲)</span><span class="en">Space</span></div>
+                <div class="key key-space key-tone">空白鍵 (Space)<br><span class="tone-label">一聲</span></div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 3. 結算畫面 -->
-    <div id="result-screen" class="screen">
-        <div class="center-container">
-            <div class="main-title" id="final-title">測驗完成！</div>
-            <div style="font-size: 22px; line-height: 2; margin-bottom: 20px; text-align: left; display: inline-block;">
-                <p>總耗時：<span id="final-time" style="color:var(--primary-color); font-weight:bold;">00:00</span></p>
-                <div id="score-details">
-                    <p>正確：<span id="final-correct" style="color:#28a745; font-weight:bold;">0</span> 題</p>
-                    <p>錯誤：<span id="final-wrong" style="color:#dc3545; font-weight:bold;">0</span> 題</p>
-                </div>
-            </div><br>
-            <button class="mode-btn special" onclick="returnToHome()">回主畫面</button>
-        </div>
-    </div>
+<script>
+    // ==========================================
+    // 1. 題庫設定區域 (請在此擴充您的千字題庫)
+    // ==========================================
+    
+    // 注音題庫 (已完整建置)
+    const bopomofoBank = {
+        initials: ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ'],
+        finals: ['ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ'],
+        tones: ['一聲', 'ˊ', 'ˇ', 'ˋ', '˙']
+    };
+    // 建立「全部」陣列
+    bopomofoBank.all = [...bopomofoBank.initials, ...bopomofoBank.finals, ...bopomofoBank.tones];
 
-    <script>
-        // --- 核心變數 ---
-        let currentMode = '';
-        let inputHistory = [];
-        let isEnglishMode = false;
+    // 語詞題庫 (預設為範例，請將您的 1000+ 語詞直接覆蓋至對應陣列中)
+    // 您可以將陣列擴充到 1000, 2000 甚至更多，系統只會隨機抽 10 題。
+    const vocabBank = {
+        low: ['蘋果', '香蕉', '學校', '老師', '同學', '快樂', '小狗', '天空', '白雲', '早安', '公園', '氣球', '鉛筆', '大樹', '花朵'], // 請在此填入 1000+ 低年級語詞
+        mid: ['圖書館', '腳踏車', '動物園', '運動會', '健康', '合作', '自然', '閱讀', '數學', '勤奮', '風景', '禮貌', '誠實', '溫暖', '勇敢'], // 請在此填入 1000+ 中年級語詞
+        high: ['微積分', '環境保護', '資訊科技', '民主自由', '國際觀', '負責任', '創造力', '邏輯', '實驗室', '大腦', '語言', '發展', '探究', '實踐', '多元'] // 請在此填入 1000+ 高年級語詞
+    };
+
+    // 聲調按鍵對應表 (依照您的需求)
+    const toneMapping = {
+        ' ': '一聲',
+        '6': 'ˊ',
+        '3': 'ˇ',
+        '4': 'ˋ',
+        '7': '˙'
+    };
+
+    // ==========================================
+    // 2. 遊戲狀態與邏輯
+    // ==========================================
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let currentMode = ''; 
+    let currentLevel = '';
+    let currentInput = '';
+    let expectingTone = false; // 判斷是否正在等待輸入聲調
+
+    // 打亂陣列 (Fisher-Yates Shuffle) 並抽出 10 題不重複
+    function getRandomQuestions(sourceArray, count = 10) {
+        let shuffled = [...sourceArray];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        // 如果題庫少於 10 題，就取題庫最大數量
+        return shuffled.slice(0, Math.min(count, shuffled.length));
+    }
+
+    function startGame(mode, level) {
+        currentMode = mode;
+        currentLevel = level;
+        currentInput = '';
+        expectingTone = false;
+
+        // 根據模式取得 10 題隨機題目
+        if (mode === 'bopomofo') {
+            currentQuestions = getRandomQuestions(bopomofoBank[level], 10);
+            expectingTone = (level === 'tones' || level === 'all'); // 如果是考聲調，啟用特殊的監聽
+        } else if (mode === 'vocab') {
+            currentQuestions = getRandomQuestions(vocabBank[level], 10);
+            expectingTone = false; // 語詞模式使用系統預設輸入法即可
+        }
+
+        currentIndex = 0;
         
-        // 模式 1-3 變數
-        let currentQuestion = 1, correctCount = 0, wrongCount = 0, maxQuestions = 10;
-        let currentTarget = "";
-        let timerInterval, secondsElapsed = 0;
-
-        // 短文模式變數
-        let articleText = "", articleCursor = 0;
-
-        // --- 題庫資料 ---
-        const bopomofoDB = ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ','ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ','空白鍵','ˊ','ˇ','ˋ','˙'];
-        const englishDB = ['apple', 'banana', 'cat', 'dog', 'elephant', 'flower', 'grape', 'house', 'ice', 'juice'];
-        const chineseDictionary = {
-            "天空": "ㄊ ㄧ ㄢ 空白鍵 ㄎ ㄨ ㄥ 空白鍵", "白雲": "ㄅ ㄞ ˊ ㄩ ㄣ ˊ", "小狗": "ㄒ ㄧ ㄠ ˇ ㄍ ㄡ ˇ",
-            "學校": "ㄒ ㄩ ㄝ ˊ ㄒ ㄧ ㄠ ˋ", "老師": "ㄌ ㄠ ˇ ㄕ 空白鍵", "同學": "ㄊ ㄨ ㄥ ˊ ㄒ ㄩ ㄝ ˊ",
-            "實驗": "ㄕ ˊ ㄧ ㄢ ˋ", "觀察": "ㄍ ㄨ ㄢ 空白鍵 ㄔ ㄚ ˊ", "報告": "ㄅ ㄠ ˋ ㄍ ㄠ ˋ",
-            "蘋果": "ㄆ ㄧ ㄥ ˊ ㄍ ㄨ ㄛ ˇ"
-        };
-        const chineseWords = Object.keys(chineseDictionary);
-
-        // 短文與對應注音字典 (擷取自各年級文章)
-        const articles = {
-            "1": "肥皂哇，你是不是魔術師。",
-            "2": "我是一隻小鳥，和媽媽出遊，被抓走。",
-            "3": "國王的御廚裡有兩個罐子，一個是陶的。",
-            "4": "快爪定居在院子裡的穀倉下，她與狗住在一起。",
-            "5": "為了搬家收拾東西，我最近真是忙得昏天黑地。",
-            "6": "宇宙間美的東西很多，花在其中佔重要的地位。"
-        };
-        const charDict = {
-            "肥":"ㄈ ㄟ ˊ", "皂":"ㄗ ㄠ ˋ", "哇":"ㄨ ㄚ 空白鍵", "你":"ㄋ ㄧ ˇ", "是":"ㄕ ˋ", "不":"ㄅ ㄨ ˊ", "魔":"ㄇ ㄛ ˊ", "術":"ㄕ ㄨ ˋ", "師":"ㄕ 空白鍵",
-            "我":"ㄨ ㄛ ˇ", "一":"ㄧ 空白鍵", "隻":"ㄓ 空白鍵", "小":"ㄒ ㄧ ㄠ ˇ", "鳥":"ㄋ ㄧ ㄠ ˇ", "和":"ㄏ ㄜ ˊ", "媽":"ㄇ ㄚ 空白鍵", "出":"ㄔ ㄨ 空白鍵", "遊":"ㄧ ㄡ ˊ", "被":"ㄅ ㄟ ˋ", "抓":"ㄓ ㄨ ㄚ 空白鍵", "走":"ㄗ ㄡ ˇ",
-            "國":"ㄍ ㄨ ㄛ ˊ", "王":"ㄨ ㄤ ˊ", "的":"ㄉ ㄜ ˙", "御":"ㄩ ˋ", "廚":"ㄔ ㄨ ˊ", "裡":"ㄌ ㄧ ˇ", "有":"ㄧ ㄡ ˇ", "兩":"ㄌ ㄧ ㄤ ˇ", "個":"ㄍ ㄜ ˙", "罐":"ㄍ ㄨ ㄢ ˋ", "子":"ㄗ ˙", "陶":"ㄊ ㄠ ˊ",
-            "快":"ㄎ ㄨ ㄞ ˋ", "爪":"ㄓ ㄠ ˇ", "定":"ㄉ ㄧ ㄥ ˋ", "居":"ㄐ ㄩ 空白鍵", "在":"ㄗ ㄞ ˋ", "院":"ㄩ ㄢ ˋ", "穀":"ㄍ ㄨ ˇ", "倉":"ㄘ ㄤ 空白鍵", "下":"ㄒ ㄧ ㄚ ˋ", "她":"ㄊ ㄚ 空白鍵", "與":"ㄩ ˇ", "狗":"ㄍ ㄡ ˇ", "住":"ㄓ ㄨ ˋ",
-            "為":"ㄨ ㄟ ˋ", "了":"ㄌ ㄜ ˙", "搬":"ㄅ ㄢ 空白鍵", "家":"ㄐ ㄧ ㄚ 空白鍵", "收":"ㄕ ㄡ 空白鍵", "拾":"ㄕ ˊ", "東":"ㄉ ㄨ ㄥ 空白鍵", "西":"ㄒ ㄧ 空白鍵", "最":"ㄗ ㄨ ㄟ ˋ", "近":"ㄐ ㄧ ㄣ ˋ", "真":"ㄓ ㄣ 空白鍵", "忙":"ㄇ ㄤ ˊ", "得":"ㄉ ㄜ ˙", "昏":"ㄏ ㄨ ㄣ 空白鍵", "天":"ㄊ ㄧ ㄢ 空白鍵", "黑":"ㄏ ㄟ 空白鍵", "地":"ㄉ ㄧ ˋ",
-            "宇":"ㄩ ˇ", "宙":"ㄓ ㄡ ˋ", "間":"ㄐ ㄧ ㄢ 空白鍵", "美":"ㄇ ㄟ ˇ", "很":"ㄏ ㄣ ˇ", "多":"ㄉ ㄨ ㄛ 空白鍵", "花":"ㄏ ㄨ ㄚ 空白鍵", "其":"ㄑ ㄧ ˊ", "中":"ㄓ ㄨ ㄥ 空白鍵", "佔":"ㄓ ㄢ ˋ", "重":"ㄓ ㄨ ㄥ ˋ", "要":"ㄧ ㄠ ˋ", "位":"ㄨ ㄟ ˋ"
-        };
-
-        // --- 流程控制 ---
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
+        // 切換畫面
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-area').style.display = 'block';
+        
+        // 針對非聲調/注音測驗隱藏鍵盤提示以保持畫面簡潔
+        if(mode === 'vocab') {
+            document.getElementById('virtual-keyboard').style.display = 'none';
+        } else {
+            document.getElementById('virtual-keyboard').style.display = 'flex';
         }
 
-        function returnToHome() {
-            clearInterval(timerInterval);
-            showScreen('home-screen');
+        updateUI();
+        
+        // 加入全域按鍵監聽
+        document.addEventListener('keydown', handleKeyPress);
+    }
+
+    function updateUI() {
+        if (currentIndex >= currentQuestions.length) {
+            finishGame();
+            return;
         }
+        document.getElementById('progress-text').innerText = `第 ${currentIndex + 1} / ${currentQuestions.length} 題`;
+        document.getElementById('question-display').innerText = currentQuestions[currentIndex];
+        document.getElementById('input-history').innerText = `目前輸入：${currentInput}`;
+    }
 
-        function startGame(mode) {
-            currentMode = mode;
-            secondsElapsed = 0;
-            inputHistory = [];
-            
-            // 確保每次開始時，Shift(英文模式) 被重置回中文預設
-            if(isEnglishMode) toggleShift(); 
-
-            // 依據模式顯示對應區塊
-            if (mode === 'article') {
-                document.getElementById('word-display').style.display = 'none';
-                document.getElementById('article-display').style.display = 'block';
-                document.getElementById('score-text').style.display = 'none';
-                document.getElementById('hint-text').style.display = 'block';
-                
-                let lvl = document.getElementById('article-level').value;
-                articleText = articles[lvl];
-                articleCursor = 0;
-                renderArticle();
-            } else {
-                document.getElementById('article-display').style.display = 'none';
-                document.getElementById('word-display').style.display = 'block';
-                document.getElementById('score-text').style.display = 'block';
-                document.getElementById('hint-text').style.display = 'none';
-                
-                // 若為英文模式，自動切換鍵盤視角
-                if(mode === 'english') toggleShift();
-                
-                currentQuestion = 1; correctCount = 0; wrongCount = 0;
-                loadNextQuestion();
+    // 處理使用者按鍵輸入 (歷程與比對)
+    function handleKeyPress(e) {
+        // 忽略功能鍵
+        if (['Shift', 'Control', 'Alt', 'Meta', 'Enter', 'Tab', 'Backspace'].includes(e.key)) {
+            if (e.key === 'Backspace') {
+                currentInput = currentInput.slice(0, -1);
+                updateUI();
             }
-
-            showScreen('game-screen');
-            startTimer();
+            return;
         }
 
-        function startTimer() {
-            clearInterval(timerInterval);
-            timerInterval = setInterval(() => {
-                secondsElapsed++;
-                let m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
-                let s = String(secondsElapsed % 60).padStart(2, '0');
-                document.getElementById('timer-text').innerText = `${m}:${s}`;
-            }, 1000);
-        }
+        let inputChar = e.key;
 
-        // --- Shift 切換中英邏輯 ---
-        function toggleShift() {
-            isEnglishMode = !isEnglishMode;
-            let btn = document.getElementById('shift-btn');
-            if(isEnglishMode) {
-                btn.classList.add('active');
-                document.body.className = 'show-en';
-            } else {
-                btn.classList.remove('active');
-                document.body.className = 'show-all'; // 預設全部顯示
+        // 【特殊規則】如果目前題目是「聲調」或「全部」，攔截特定數字與空白鍵轉換為聲調符號
+        if (currentMode === 'bopomofo') {
+            if (toneMapping[inputChar] !== undefined) {
+                // 防止空白鍵捲動網頁
+                if (inputChar === ' ') e.preventDefault(); 
+                inputChar = toneMapping[inputChar];
             }
         }
 
-        // --- 鍵盤輸入處理 ---
-        function typeKey(zhChar, enChar) {
-            let typed = isEnglishMode ? enChar.toLowerCase() : zhChar;
-            inputHistory.push(typed);
-            updateHistoryUI();
+        // 更新畫面歷程
+        currentInput += inputChar;
+        document.getElementById('input-history').innerText = `目前輸入：${currentInput}`;
 
-            if (currentMode === 'article') {
-                checkArticleLogic();
-            }
+        // 檢查是否正確
+        checkAnswer();
+    }
+
+    function checkAnswer() {
+        const currentAnswer = currentQuestions[currentIndex];
+        
+        // 如果輸入的最後幾個字元等於答案，或者完全一致，則過關進入下一題
+        // 這樣可以支援使用者用拼音連續輸入，只要字尾出現正確語詞即算對
+        if (currentInput.endsWith(currentAnswer)) {
+            setTimeout(() => {
+                currentIndex++;
+                currentInput = ''; // 清空輸入歷程，準備下一題
+                updateUI();
+            }, 300); // 稍微延遲 0.3 秒讓使用者看到輸入成功的歷程
         }
+    }
 
-        function backspace() {
-            inputHistory.pop();
-            updateHistoryUI();
-        }
+    function finishGame() {
+        document.getElementById('question-display').innerText = "🎉 恭喜完成本局測驗！";
+        document.getElementById('input-history').innerText = "";
+        document.getElementById('progress-text').innerText = "測驗結束";
+        document.removeEventListener('keydown', handleKeyPress);
+    }
 
-        function updateHistoryUI() {
-            document.getElementById('history-area').innerText = inputHistory.join(' ');
-        }
+    function resetGame() {
+        document.removeEventListener('keydown', handleKeyPress);
+        document.getElementById('game-area').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'block';
+    }
+</script>
 
-        // --- 模式 1-3：10題邏輯 ---
-        function loadNextQuestion() {
-            if (currentQuestion > maxQuestions) {
-                endGame(); return;
-            }
-
-            inputHistory = []; updateHistoryUI();
-            document.getElementById('progress-text').innerText = `進度: ${currentQuestion}/${maxQuestions}`;
-            document.getElementById('score-text').innerText = `⭕:${correctCount} | ❌:${wrongCount}`;
-            
-            if (currentMode === 'bopomofo') currentTarget = bopomofoDB[Math.floor(Math.random() * bopomofoDB.length)];
-            else if (currentMode === 'chinese') currentTarget = chineseWords[Math.floor(Math.random() * chineseWords.length)];
-            else if (currentMode === 'english') currentTarget = englishDB[Math.floor(Math.random() * englishDB.length)];
-            
-            document.getElementById('target-word').innerText = currentTarget;
-            setTimeout(speakTarget, 400);
-        }
-
-        function checkAnswer() {
-            if(currentMode === 'article' || inputHistory.length === 0) return;
-
-            let isCorrect = false;
-            let userInput = inputHistory.join(' ').trim();
-
-            if (currentMode === 'bopomofo') isCorrect = (userInput === currentTarget);
-            else if (currentMode === 'english') isCorrect = (inputHistory.join('') === currentTarget);
-            else if (currentMode === 'chinese') isCorrect = (userInput === chineseDictionary[currentTarget]);
-
-            if (isCorrect) {
-                showFeedback("⭕ 正確！", true);
-                correctCount++; currentQuestion++;
-                setTimeout(loadNextQuestion, 800);
-            } else {
-                showFeedback("❌ 錯誤", false);
-            }
-        }
-
-        // --- 模式 4：短文邏輯 ---
-        function renderArticle() {
-            if (articleCursor >= articleText.length) {
-                endGame(); return;
-            }
-
-            let html = "";
-            for(let i=0; i<articleText.length; i++) {
-                if(i < articleCursor) html += `<span class="char-normal">${articleText[i]}</span>`;
-                else if(i === articleCursor) html += `<span class="char-target">${articleText[i]}</span>`;
-                else html += `<span class="char-future">${articleText[i]}</span>`;
-            }
-            document.getElementById('article-display').innerHTML = html;
-            document.getElementById('progress-text').innerText = `進度: ${articleCursor}/${articleText.length}`;
-            inputHistory = []; updateHistoryUI();
-
-            // 略過非字典內的標點 (保留逗號、句號讓學生打)
-            let targetChar = articleText[articleCursor];
-            if(targetChar !== '，' && targetChar !== '。' && !charDict[targetChar]) {
-                articleCursor++;
-                renderArticle();
-            }
-        }
-
-        function checkArticleLogic() {
-            if (articleCursor >= articleText.length) return;
-            let targetChar = articleText[articleCursor];
-            let currentInput = inputHistory.join(' ');
-
-            // 1. 驗證逗號 (英文模式下按 ',')
-            if (targetChar === '，') {
-                if (isEnglishMode && currentInput === ',') {
-                    showFeedback("標點正確！", true);
-                    articleCursor++; renderArticle();
-                } return;
-            }
-            // 2. 驗證句號 (中文模式下按 ` 接著 .)
-            if (targetChar === '。') {
-                if (!isEnglishMode && currentInput === '` .') {
-                    showFeedback("標點正確！", true);
-                    articleCursor++; renderArticle();
-                } return;
-            }
-            // 3. 驗證中文字 (比對字典)
-            if (!isEnglishMode && charDict[targetChar]) {
-                if (currentInput === charDict[targetChar]) {
-                    showFeedback("正確！", true);
-                    articleCursor++; renderArticle();
-                }
-            }
-        }
-
-        // --- 共用功能 ---
-        function markAsWrong() {
-            if(currentMode === 'article') {
-                articleCursor++; renderArticle();
-            } else {
-                showFeedback("跳過本題", false);
-                wrongCount++; currentQuestion++;
-                setTimeout(loadNextQuestion, 800);
-            }
-        }
-
-        function showFeedback(msg, isSuccess) {
-            let fb = document.getElementById('feedback-msg');
-            fb.innerText = msg;
-            fb.style.color = isSuccess ? "#28a745" : "#dc3545";
-            fb.style.opacity = 1;
-            setTimeout(() => fb.style.opacity = 0, 800);
-        }
-
-        function speakTarget() {
-            let text = currentMode === 'article' ? articleText[articleCursor] : currentTarget;
-            if(!text) return;
-            if(text === '空白鍵') text = '一聲';
-            
-            window.speechSynthesis.cancel(); 
-            let msg = new SpeechSynthesisUtterance(text);
-            msg.lang = (currentMode === 'english' || isEnglishMode) ? 'en-US' : 'zh-TW';
-            msg.rate = 0.85; 
-            window.speechSynthesis.speak(msg);
-        }
-
-        function endGame() {
-            clearInterval(timerInterval);
-            document.getElementById('final-time').innerText = document.getElementById('timer-text').innerText;
-            
-            if (currentMode === 'article') {
-                document.getElementById('final-title').innerText = "🎉 短文挑戰完成！";
-                document.getElementById('score-details').style.display = 'none';
-            } else {
-                document.getElementById('final-title').innerText = "測驗完成！";
-                document.getElementById('score-details').style.display = 'block';
-                document.getElementById('final-correct').innerText = correctCount;
-                document.getElementById('final-wrong').innerText = wrongCount;
-            }
-            showScreen('result-screen');
-        }
-    </script>
 </body>
 </html>
