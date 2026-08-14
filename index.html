@@ -3,319 +3,791 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>注音與語詞輸入測驗系統</title>
+    <title>聽覺注意力與故事理解訓練系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
         body {
-            font-family: 'Microsoft JhengHei', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f0fdf4;
+            user-select: none;
         }
-        h1 { color: #2c3e50; }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        @keyframes customPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.85; }
         }
-        /* 選單與按鈕 */
-        .menu { margin-bottom: 20px; }
-        button {
-            padding: 10px 15px;
-            margin: 5px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-            background-color: #3498db;
-            color: white;
-            transition: 0.3s;
+        .pulse-attention {
+            animation: customPulse 0.6s infinite alternate ease-in-out;
         }
-        button:hover { background-color: #2980b9; }
-        .btn-active { background-color: #e74c3c !important; }
-        
-        /* 遊戲區域 */
-        #game-area { display: none; margin-top: 20px; }
-        .question-box {
-            font-size: 48px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 20px 0;
-            padding: 20px;
-            background: #ecf0f1;
-            border-radius: 10px;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
         }
-        .progress {
-            font-size: 18px;
-            color: #7f8c8d;
-            margin-bottom: 10px;
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
         }
-        
-        /* 輸入歷程與提示 */
-        .history-box {
-            font-size: 24px;
-            color: #e67e22;
-            min-height: 40px;
-            margin: 15px 0;
-            letter-spacing: 2px;
-        }
-        .instruction {
-            color: #7f8c8d;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-
-        /* 虛擬鍵盤 */
-        .keyboard {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-            margin-top: 20px;
-            align-items: center;
-        }
-        .key-row {
-            display: flex;
-            gap: 5px;
-            justify-content: center;
-        }
-        .key {
-            width: 40px;
-            height: 40px;
-            background-color: #ecf0f1;
-            border: 1px solid #bdc3c7;
-            border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: bold;
-            color: #333;
-        }
-        /* 標示聲調按鍵 */
-        .key-tone {
-            background-color: #f39c12;
-            color: white;
-            border-color: #e67e22;
-        }
-        .key-space {
-            width: 250px;
-            background-color: #f39c12;
-            color: white;
-        }
-        .tone-label { font-size: 10px; opacity: 0.8; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 text-slate-800">
 
-<div class="container">
-    <h1>📝 注音與語詞輸入測驗</h1>
-    
-    <div class="menu" id="main-menu">
-        <h3>選擇測驗類型</h3>
-        <div>
-            <p>【注音符號練習】</p>
-            <button onclick="startGame('bopomofo', 'initials')">聲母</button>
-            <button onclick="startGame('bopomofo', 'finals')">韻母</button>
-            <button onclick="startGame('bopomofo', 'tones')">聲調</button>
-            <button onclick="startGame('bopomofo', 'all')">全部混合</button>
-        </div>
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-        <div>
-            <p>【國語語詞練習 (千字題庫)】</p>
-            <button onclick="startGame('vocab', 'low')">低年級 (一、二)</button>
-            <button onclick="startGame('vocab', 'mid')">中年級 (三、四)</button>
-            <button onclick="startGame('vocab', 'high')">高年級 (五、六)</button>
-        </div>
+    <!-- Main App Container -->
+    <div id="app" class="w-full max-w-4xl bg-white rounded-3xl shadow-xl border-4 border-emerald-400 overflow-hidden relative flex flex-col min-h-[620px]">
+        
+        <!-- HEADER -->
+        <header class="bg-emerald-500 text-white p-4 text-center shadow-md flex justify-between items-center px-6">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-ear-listen text-3xl text-yellow-300"></i>
+                <h1 class="text-xl sm:text-2xl font-black tracking-wide">專注力動動腦：聽力專注與故事理解訓練</h1>
+            </div>
+            <div id="scoreBadge" class="hidden bg-emerald-700 text-yellow-300 px-4 py-1.5 rounded-full font-bold text-lg border-2 border-yellow-300">
+                得分: <span id="currentScore">0</span>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 p-4 sm:p-6 flex flex-col justify-between relative">
+            
+            <!-- 1. SETUP / START SCREEN -->
+            <div id="setupScreen" class="space-y-6 max-w-2xl mx-auto w-full my-auto py-4">
+                <div class="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-900 text-sm sm:text-base flex items-start space-x-3">
+                    <i class="fa-solid fa-lightbulb text-amber-500 text-2xl mt-1"></i>
+                    <div>
+                        <p class="font-bold">給老師/家長的訓練說明：</p>
+                        <p>專為引導孩子「先聽完再思考」設計。結合校園指令、生活生活習慣與《品德故事集》閱讀短文理解。每次隨機抽選 10 題進行測驗。</p>
+                    </div>
+                </div>
+
+                <!-- Difficulty Selection -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block font-bold text-slate-700 mb-2 flex items-center">
+                        <i class="fa-solid fa-layer-group text-emerald-600 mr-2"></i> 選擇訓練長度 / 難度（每次練習 10 題）：
+                    </label>
+                    <select id="levelSelect" class="w-full p-3 rounded-xl border-2 border-emerald-400 text-base sm:text-lg font-bold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <option value="5">【極短句 5字】基礎生活與課堂指令 (5圖選1)</option>
+                        <option value="5-10">【短句 5-10字】時間與情境聽覺記憶 (5圖選1)</option>
+                        <option value="10-15">【中句 10-15字】地點與雙重動作提取 (10圖選多)</option>
+                        <option value="20-30">【長句 20-30字】複雜課堂指令與情境提取 (10圖選多)</option>
+                        <option value="30-50">【品德故事題 30-50字】繪本故事理解與邏輯判斷 (10圖選多)</option>
+                        <option value="math">【聽覺數字記憶 - 算式報讀】記住報讀的數字與答案 (5選1)</option>
+                    </select>
+                </div>
+
+                <!-- Repeat Setting -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block font-bold text-slate-700 mb-2 flex items-center">
+                        <i class="fa-solid fa-rotate text-emerald-600 mr-2"></i> 報讀重播設定：
+                    </label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="repeatOption" value="allow" checked class="w-5 h-5 text-emerald-600 focus:ring-emerald-500">
+                            <span class="ml-2 font-bold text-slate-700">可重複點擊聽</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="repeatOption" value="deny" class="w-5 h-5 text-emerald-600 focus:ring-emerald-500">
+                            <span class="ml-2 font-bold text-slate-700">不可重複（僅播一遍）</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Time Limit Setting -->
+                <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    <label class="block font-bold text-slate-700 mb-2 flex items-center">
+                        <i class="fa-solid fa-stopwatch text-emerald-600 mr-2"></i> 報讀結束後限制回答時間：
+                    </label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                        <label class="flex items-center justify-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="timeOption" value="0" checked class="w-4 h-4 text-emerald-600">
+                            <span class="ml-2 font-bold text-slate-700">不限時</span>
+                        </label>
+                        <label class="flex items-center justify-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="timeOption" value="10" class="w-4 h-4 text-emerald-600">
+                            <span class="ml-2 font-bold text-slate-700">10 秒</span>
+                        </label>
+                        <label class="flex items-center justify-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="timeOption" value="5" class="w-4 h-4 text-emerald-600">
+                            <span class="ml-2 font-bold text-slate-700">5 秒</span>
+                        </label>
+                        <label class="flex items-center justify-center p-3 bg-white border-2 border-slate-200 rounded-xl cursor-pointer hover:border-emerald-400 transition">
+                            <input type="radio" name="timeOption" value="3" class="w-4 h-4 text-emerald-600">
+                            <span class="ml-2 font-bold text-slate-700">3 秒</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="startBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-2xl py-4 rounded-2xl shadow-lg transform active:scale-95 transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span>開始訓練</span>
+                </button>
+            </div>
+
+            <!-- 2. ATTENTION PROMPT OVERLAY -->
+            <div id="attentionOverlay" class="hidden absolute inset-0 bg-red-600 bg-opacity-95 z-50 flex flex-col items-center justify-center text-white p-6 rounded-3xl">
+                <div class="pulse-attention flex flex-col items-center text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-8xl mb-4 text-yellow-300"></i>
+                    <h2 class="text-5xl sm:text-6xl font-black tracking-widest text-yellow-300 mb-2">注意聽！</h2>
+                    <p class="text-xl sm:text-2xl font-bold tracking-wider">眼睛看著螢幕，耳朵專心聽！</p>
+                </div>
+            </div>
+
+            <!-- 3. GAMEPLAY SCREEN -->
+            <div id="gameScreen" class="hidden flex-1 flex flex-col justify-between space-y-4">
+                
+                <!-- TOP CONTROL BAR -->
+                <div class="flex flex-wrap justify-between items-center bg-emerald-50 p-3 rounded-2xl border border-emerald-200 gap-2">
+                    <div class="flex items-center space-x-3">
+                        <button id="audioPlayBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl shadow flex items-center space-x-2 active:scale-95 transition">
+                            <i class="fa-solid fa-volume-high text-xl"></i>
+                            <span>再聽一次</span>
+                        </button>
+                        <span id="playingStatus" class="text-emerald-700 font-bold text-sm hidden">
+                            <i class="fa-solid fa-spinner animate-spin mr-1"></i> 播放中...
+                        </span>
+                    </div>
+
+                    <div class="bg-white border-2 border-emerald-300 px-4 py-1.5 rounded-full text-emerald-800 font-extrabold text-base">
+                        進度: <span id="currentQNum" class="text-emerald-600 text-lg">1</span> / 10 題
+                    </div>
+
+                    <div id="timerContainer" class="hidden flex items-center space-x-2 bg-amber-100 border border-amber-300 px-4 py-1.5 rounded-full text-amber-800 font-bold">
+                        <i class="fa-solid fa-clock"></i>
+                        <span>倒數: <span id="timerCount" class="text-xl text-red-600">5</span> 秒</span>
+                    </div>
+
+                    <button id="quitBtn" class="text-slate-400 hover:text-slate-600 font-bold text-sm px-3 py-1">
+                        返回設定
+                    </button>
+                </div>
+
+                <!-- QUESTION PROMPT AREA -->
+                <div class="bg-amber-50/60 border border-amber-200 p-4 rounded-2xl text-center shadow-sm">
+                    <p id="questionTitle" class="text-xl sm:text-2xl font-black text-slate-800"></p>
+                    <p id="targetHint" class="text-slate-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- OPTIONS GRID (5 or 10 cards) -->
+                <div id="optionsContainer" class="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4 my-auto"></div>
+
+                <!-- SUBMIT BUTTON -->
+                <div id="submitContainer" class="hidden text-center pt-2">
+                    <button id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-black text-xl px-10 py-3 rounded-2xl shadow-lg transform active:scale-95 transition">
+                        確認答案 (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. FEEDBACK MODAL -->
+            <div id="feedbackModal" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+                <div id="feedbackCard" class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl transform transition-all border-4 border-emerald-400">
+                    <div id="feedbackIcon" class="text-7xl mb-3">
+                        <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                    </div>
+                    <h3 id="feedbackTitle" class="text-3xl font-black mb-2 text-slate-800">答對了！太棒了！</h3>
+                    <p id="feedbackDetail" class="text-slate-600 text-lg mb-6">你非常專心聽講！</p>
+                    <button id="nextBtn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl py-3 rounded-2xl shadow-lg active:scale-95 transition">
+                        下一題
+                    </button>
+                </div>
+            </div>
+
+            <!-- 5. SUMMARY MODAL -->
+            <div id="summaryModal" class="hidden absolute inset-0 bg-black/60 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl border-4 border-yellow-400">
+                    <div class="text-7xl mb-2 text-yellow-400">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-3xl font-black text-slate-800 mb-1">完成練習！</h3>
+                    <p class="text-slate-500 text-base mb-4">本次 10 題專注力測驗結果：</p>
+                    
+                    <div class="bg-amber-50 rounded-2xl p-4 border-2 border-amber-200 mb-6">
+                        <div class="text-5xl font-black text-emerald-600 mb-1">
+                            <span id="finalScore">100</span> <span class="text-2xl text-slate-600">分</span>
+                        </div>
+                        <p id="summaryComment" class="font-bold text-amber-800 text-lg">耳朵超級專心，太優秀了！</p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="retrySessionBtn" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-2xl shadow active:scale-95 transition">
+                            再練一次 10 題
+                        </button>
+                        <button id="backSetupBtn" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold py-3 rounded-2xl shadow active:scale-95 transition">
+                            調整設定
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- FOOTER -->
+        <footer class="text-center py-2 text-xs text-slate-400 bg-slate-50 border-t border-slate-100">
+            【蔡尚瑜老師製】
+        </footer>
     </div>
 
-    <div id="game-area">
-        <div class="progress" id="progress-text">第 1 / 10 題</div>
-        <div class="question-box" id="question-display">題目</div>
-        
-        <div class="instruction">請直接使用鍵盤輸入，系統會自動比對。</div>
-        <div class="history-box" id="input-history">目前輸入：</div>
-        
-        <button onclick="resetGame()" style="background-color: #95a5a6;">返回主選單</button>
+    <script>
+        // CORRECTED & NATURAL TRADITIONAL CHINESE BASE ITEMS
+        const baseItems = [
+            // Classroom & Habits
+            { id: 'homework', name: '拿出作業', icon: 'homework', verb: '把作業拿出來' },
+            { id: 'book', name: '翻開課本', icon: 'book', verb: '把課本翻開' },
+            { id: 'listen', name: '專心聽講', icon: 'listen', verb: '專心聽老師說話' },
+            { id: 'chair', name: '靠攏椅子', icon: 'chair', verb: '把椅子靠攏' },
+            { id: 'sit', name: '坐好休息', icon: 'sit', verb: '在座位上坐好' },
+            { id: 'hand', name: '舉手發言', icon: 'hand', verb: '想發言要先舉手' },
+            { id: 'magnifier', name: '檢查錯題', icon: 'magnifier', verb: '檢查被圈起來的地方' },
+            { id: 'wait', name: '安靜等待', icon: 'wait', verb: '在旁邊安靜等待' },
+            { id: 'toy', name: '收拾玩具', icon: 'toy', verb: '把玩具收乾淨' },
+            { id: 'truth', name: '誠實認錯', icon: 'truth', verb: '勇敢誠實認錯' },
+            { id: 'polite', name: '有禮貌', icon: 'polite', verb: '對同學有禮貌' },
+            { id: 'share', name: '輪流分享', icon: 'share', verb: '輪流使用玩具' },
+            { id: 'pencil', name: '帶文具', icon: 'pencil', verb: '帶鉛筆和橡皮擦' },
+            { id: 'clean', name: '打掃教室', icon: 'clean', verb: '認真打掃環境' },
+            { id: 'clock', name: '按時起床', icon: 'clock', verb: '聽鬧鐘按時起床' },
 
-        <!-- 虛擬鍵盤 (主要用來視覺提示聲調位置) -->
-        <div class="keyboard" id="virtual-keyboard">
-            <div class="key-row">
-                <div class="key">1</div>
-                <div class="key">2</div>
-                <div class="key key-tone">3<br><span class="tone-label">三聲ˇ</span></div>
-                <div class="key key-tone">4<br><span class="tone-label">四聲ˋ</span></div>
-                <div class="key">5</div>
-                <div class="key key-tone">6<br><span class="tone-label">二聲ˊ</span></div>
-                <div class="key key-tone">7<br><span class="tone-label">輕聲˙</span></div>
-                <div class="key">8</div>
-                <div class="key">9</div>
-                <div class="key">0</div>
-            </div>
-            <div class="key-row">
-                <div class="key key-space key-tone">空白鍵 (Space)<br><span class="tone-label">一聲</span></div>
-            </div>
-        </div>
-    </div>
-</div>
+            // Everyday Food & Healthy Habits
+            { id: 'cookie', name: '吃餅乾', icon: 'cookie', verb: '吃一包餅乾' },
+            { id: 'water', name: '多喝水', icon: 'water', verb: '記得多喝水' },
+            { id: 'apple', name: '吃蘋果', icon: 'apple', verb: '吃甜甜的蘋果' },
+            { id: 'toast', name: '吃吐司', icon: 'toast', verb: '吃美味的吐司' },
+            { id: 'chicken', name: '吃炸雞', icon: 'chicken', verb: '吃香酥的炸雞' },
+            { id: 'banana', name: '吃香蕉', icon: 'banana', verb: '吃黃黃的香蕉' },
+            { id: 'wash', name: '飯前洗手', icon: 'wash', verb: '吃飯前先洗手' },
 
-<script>
-    // ==========================================
-    // 1. 題庫設定區域 (請在此擴充您的千字題庫)
-    // ==========================================
-    
-    // 注音題庫 (已完整建置)
-    const bopomofoBank = {
-        initials: ['ㄅ','ㄆ','ㄇ','ㄈ','ㄉ','ㄊ','ㄋ','ㄌ','ㄍ','ㄎ','ㄏ','ㄐ','ㄑ','ㄒ','ㄓ','ㄔ','ㄕ','ㄖ','ㄗ','ㄘ','ㄙ'],
-        finals: ['ㄚ','ㄛ','ㄜ','ㄝ','ㄞ','ㄟ','ㄠ','ㄡ','ㄢ','ㄣ','ㄤ','ㄥ','ㄦ','ㄧ','ㄨ','ㄩ'],
-        tones: ['一聲', 'ˊ', 'ˇ', 'ˋ', '˙']
-    };
-    // 建立「全部」陣列
-    bopomofoBank.all = [...bopomofoBank.initials, ...bopomofoBank.finals, ...bopomofoBank.tones];
+            // Animals & Nature Actions
+            { id: 'dog', name: '餵養小狗', icon: 'dog', verb: '照顧可愛的小狗' },
+            { id: 'cat', name: '領養小貓', icon: 'cat', verb: '領養溫柔的小貓' },
+            { id: 'squirrel', name: '松鼠爬樹', icon: 'squirrel', verb: '看松鼠在樹上爬' },
+            { id: 'bee', name: '蜜蜂採蜜', icon: 'bee', verb: '看蜜蜂在花園採蜜' },
+            { id: 'rabbit', name: '兔子跑步', icon: 'rabbit', verb: '練習跑步運動' },
+            { id: 'fish', name: '小魚游泳', icon: 'fish', verb: '觀察小魚游泳' },
 
-    // 語詞題庫 (預設為範例，請將您的 1000+ 語詞直接覆蓋至對應陣列中)
-    // 您可以將陣列擴充到 1000, 2000 甚至更多，系統只會隨機抽 10 題。
-    const vocabBank = {
-        low: ['蘋果', '香蕉', '學校', '老師', '同學', '快樂', '小狗', '天空', '白雲', '早安', '公園', '氣球', '鉛筆', '大樹', '花朵'], // 請在此填入 1000+ 低年級語詞
-        mid: ['圖書館', '腳踏車', '動物園', '運動會', '健康', '合作', '自然', '閱讀', '數學', '勤奮', '風景', '禮貌', '誠實', '溫暖', '勇敢'], // 請在此填入 1000+ 中年級語詞
-        high: ['微積分', '環境保護', '資訊科技', '民主自由', '國際觀', '負責任', '創造力', '邏輯', '實驗室', '大腦', '語言', '發展', '探究', '實踐', '多元'] // 請在此填入 1000+ 高年級語詞
-    };
+            // Places & Activities
+            { id: 'drive', name: '學習開車', icon: 'car', verb: '學習開車技術' },
+            { id: 'park', name: '去公園散步', icon: 'park', verb: '去公園散步玩耍' },
+            { id: 'bike', name: '騎腳踏車', icon: 'bike', verb: '快樂騎腳踏車' },
+            { id: 'school', name: '準時上學', icon: 'school', verb: '準時去學校上學' },
+            { id: 'library', name: '去圖書館', icon: 'library', verb: '去圖書館借書看' },
+            { id: 'store', name: '去商店', icon: 'store', verb: '去便利商店買東西' },
+            { id: 'pool', name: '游泳池', icon: 'pool', verb: '去游泳池戲水' },
+            { id: 'beach', name: '去海邊', icon: 'beach', verb: '去海邊玩沙子' },
+            { id: 'run', name: '操場跑步', icon: 'run', verb: '在操場練習跑步' },
+            { id: 'ball', name: '打籃球', icon: 'ball', verb: '在操場打籃球' }
+        ];
 
-    // 聲調按鍵對應表 (依照您的需求)
-    const toneMapping = {
-        ' ': '一聲',
-        '6': 'ˊ',
-        '3': 'ˇ',
-        '4': 'ˋ',
-        '7': '˙'
-    };
-
-    // ==========================================
-    // 2. 遊戲狀態與邏輯
-    // ==========================================
-    let currentQuestions = [];
-    let currentIndex = 0;
-    let currentMode = ''; 
-    let currentLevel = '';
-    let currentInput = '';
-    let expectingTone = false; // 判斷是否正在等待輸入聲調
-
-    // 打亂陣列 (Fisher-Yates Shuffle) 並抽出 10 題不重複
-    function getRandomQuestions(sourceArray, count = 10) {
-        let shuffled = [...sourceArray];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        // 如果題庫少於 10 題，就取題庫最大數量
-        return shuffled.slice(0, Math.min(count, shuffled.length));
-    }
-
-    function startGame(mode, level) {
-        currentMode = mode;
-        currentLevel = level;
-        currentInput = '';
-        expectingTone = false;
-
-        // 根據模式取得 10 題隨機題目
-        if (mode === 'bopomofo') {
-            currentQuestions = getRandomQuestions(bopomofoBank[level], 10);
-            expectingTone = (level === 'tones' || level === 'all'); // 如果是考聲調，啟用特殊的監聽
-        } else if (mode === 'vocab') {
-            currentQuestions = getRandomQuestions(vocabBank[level], 10);
-            expectingTone = false; // 語詞模式使用系統預設輸入法即可
+        function getSvgIcon(type) {
+            const icons = {
+                homework: '<i class="fa-solid fa-file-signature text-blue-700 text-5xl"></i>',
+                book: '<i class="fa-solid fa-book-open text-emerald-600 text-5xl"></i>',
+                listen: '<i class="fa-solid fa-ear-listen text-yellow-500 text-5xl"></i>',
+                chair: '<i class="fa-solid fa-chair text-amber-800 text-5xl"></i>',
+                sit: '<i class="fa-solid fa-user-check text-indigo-500 text-5xl"></i>',
+                hand: '<i class="fa-solid fa-hand text-amber-500 text-5xl"></i>',
+                magnifier: '<i class="fa-solid fa-magnifying-glass-location text-teal-600 text-5xl"></i>',
+                wait: '<i class="fa-solid fa-hourglass-half text-slate-500 text-5xl"></i>',
+                toy: '<i class="fa-solid fa-cubes text-purple-500 text-5xl"></i>',
+                truth: '<i class="fa-solid fa-face-smile text-emerald-500 text-5xl"></i>',
+                polite: '<i class="fa-solid fa-handshake text-blue-500 text-5xl"></i>',
+                share: '<i class="fa-solid fa-arrows-rotate text-rose-500 text-5xl"></i>',
+                pencil: '<i class="fa-solid fa-pencil text-slate-700 text-5xl"></i>',
+                clean: '<i class="fa-solid fa-broom text-amber-600 text-5xl"></i>',
+                clock: '<i class="fa-solid fa-clock text-red-500 text-5xl"></i>',
+                cookie: '<i class="fa-solid fa-cookie-bite text-amber-600 text-5xl"></i>',
+                water: '<i class="fa-solid fa-bottle-water text-blue-400 text-5xl"></i>',
+                apple: '<i class="fa-solid fa-apple-whole text-red-500 text-5xl"></i>',
+                toast: '<i class="fa-solid fa-bread-slice text-amber-500 text-5xl"></i>',
+                chicken: '<i class="fa-solid fa-drumstick-bite text-amber-800 text-5xl"></i>',
+                banana: '<i class="fa-solid fa-banana text-yellow-400 text-5xl"></i>',
+                wash: '<i class="fa-solid fa-soap text-cyan-500 text-5xl"></i>',
+                dog: '<i class="fa-solid fa-dog text-amber-700 text-5xl"></i>',
+                cat: '<i class="fa-solid fa-cat text-orange-400 text-5xl"></i>',
+                squirrel: '<i class="fa-solid fa-tree text-emerald-700 text-5xl"></i>',
+                bee: '<i class="fa-solid fa-bug text-yellow-500 text-5xl"></i>',
+                rabbit: '<i class="fa-solid fa-person-running text-orange-500 text-5xl"></i>',
+                fish: '<i class="fa-solid fa-fish text-cyan-500 text-5xl"></i>',
+                car: '<i class="fa-solid fa-car text-blue-600 text-5xl"></i>',
+                park: '<i class="fa-solid fa-tree text-green-600 text-5xl"></i>',
+                bike: '<i class="fa-solid fa-bicycle text-teal-500 text-5xl"></i>',
+                school: '<i class="fa-solid fa-school text-rose-500 text-5xl"></i>',
+                library: '<i class="fa-solid fa-book-atlas text-indigo-600 text-5xl"></i>',
+                store: '<i class="fa-solid fa-store text-amber-600 text-5xl"></i>',
+                pool: '<i class="fa-solid fa-person-swimming text-sky-500 text-5xl"></i>',
+                beach: '<i class="fa-solid fa-umbrella-beach text-orange-400 text-5xl"></i>',
+                run: '<i class="fa-solid fa-person-running text-red-500 text-5xl"></i>',
+                ball: '<i class="fa-solid fa-basketball text-orange-500 text-5xl"></i>'
+            };
+            return icons[type] || '<i class="fa-solid fa-star text-yellow-400 text-5xl"></i>';
         }
 
-        currentIndex = 0;
-        
-        // 切換畫面
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-area').style.display = 'block';
-        
-        // 針對非聲調/注音測驗隱藏鍵盤提示以保持畫面簡潔
-        if(mode === 'vocab') {
-            document.getElementById('virtual-keyboard').style.display = 'none';
-        } else {
-            document.getElementById('virtual-keyboard').style.display = 'flex';
-        }
+        const timePeriods = ['早上', '中午', '下午', '晚上', '放學後', '上課時', '課間休息', '星期六', '禮拜天'];
 
-        updateUI();
-        
-        // 加入全域按鍵監聽
-        document.addEventListener('keydown', handleKeyPress);
-    }
+        function generateQuestionBank() {
+            const bank = { "5": [], "5-10": [], "10-15": [], "20-30": [], "30-50": [], "math": [] };
 
-    function updateUI() {
-        if (currentIndex >= currentQuestions.length) {
-            finishGame();
-            return;
-        }
-        document.getElementById('progress-text').innerText = `第 ${currentIndex + 1} / ${currentQuestions.length} 題`;
-        document.getElementById('question-display').innerText = currentQuestions[currentIndex];
-        document.getElementById('input-history').innerText = `目前輸入：${currentInput}`;
-    }
-
-    // 處理使用者按鍵輸入 (歷程與比對)
-    function handleKeyPress(e) {
-        // 忽略功能鍵
-        if (['Shift', 'Control', 'Alt', 'Meta', 'Enter', 'Tab', 'Backspace'].includes(e.key)) {
-            if (e.key === 'Backspace') {
-                currentInput = currentInput.slice(0, -1);
-                updateUI();
+            // LEVEL 1: 5字
+            for (let i = 0; i < 100; i++) {
+                const item = baseItems[i % baseItems.length];
+                bank["5"].push({
+                    text: `請你${item.verb}。`,
+                    questionPrompt: "請點選剛剛聽到的指令或動作：",
+                    targetIds: [item.id],
+                    multi: false
+                });
             }
-            return;
-        }
 
-        let inputChar = e.key;
-
-        // 【特殊規則】如果目前題目是「聲調」或「全部」，攔截特定數字與空白鍵轉換為聲調符號
-        if (currentMode === 'bopomofo') {
-            if (toneMapping[inputChar] !== undefined) {
-                // 防止空白鍵捲動網頁
-                if (inputChar === ' ') e.preventDefault(); 
-                inputChar = toneMapping[inputChar];
+            // LEVEL 2: 5-10字
+            for (let i = 0; i < 100; i++) {
+                const item = baseItems[i % baseItems.length];
+                const period = timePeriods[i % timePeriods.length];
+                const templates = [
+                    `${period}，請你${item.verb}。`,
+                    `老師提醒大家，${period}要${item.verb}。`,
+                    `在教室裡，${period}請${item.verb}。`
+                ];
+                bank["5-10"].push({
+                    text: templates[i % templates.length],
+                    questionPrompt: "請聽完句子後，選出正確對應的圖片：",
+                    targetIds: [item.id],
+                    multi: false
+                });
             }
+
+            // LEVEL 3: 10-15字
+            for (let i = 0; i < 100; i++) {
+                const t1 = baseItems[i % baseItems.length];
+                const t2 = baseItems[(i + 5) % baseItems.length];
+                const period = timePeriods[i % timePeriods.length];
+                const templates = [
+                    `${period}，老師請小明${t1.verb}，接著再去${t2.verb}。`,
+                    `${period}，大家先去${t1.verb}，然後記得要${t2.verb}。`
+                ];
+                bank["10-15"].push({
+                    text: templates[i % templates.length],
+                    questionPrompt: "請從十張圖片中，選出剛剛聽到的所有動作：",
+                    targetIds: [t1.id, t2.id],
+                    multi: true
+                });
+            }
+
+            // LEVEL 4: 20-30字
+            for (let i = 0; i < 100; i++) {
+                const t1 = baseItems[i % baseItems.length];
+                const t2 = baseItems[(i + 4) % baseItems.length];
+                const t3 = baseItems[(i + 8) % baseItems.length];
+                const period = timePeriods[i % timePeriods.length];
+                const templates = [
+                    `${period}上課時，老師請小剛先${t1.verb}。做完之後要${t2.verb}，最後大家再一起${t3.verb}。`,
+                    `星期六早上，爸爸帶我們去${t1.verb}。中午我們去${t2.verb}，下午大家高興地去${t3.verb}。`
+                ];
+                bank["20-30"].push({
+                    text: templates[i % templates.length],
+                    questionPrompt: "請選出句子中提到的三個重點事項：",
+                    targetIds: [t1.id, t2.id, t3.id],
+                    multi: true
+                });
+            }
+
+            // LEVEL 5: 30-50字 (繪本故事改編短文與邏輯理解)
+            const level5Stories = [
+                {
+                    text: "小明在學校牆壁上亂畫圖，校長問他是誰畫的，小明一開始很緊張不敢承認。後來校長鼓勵他，小明勇敢誠實認錯，並把牆壁擦乾淨。",
+                    prompt: "請問小明最後表現出什麼好行為，並做了什麼事？",
+                    targets: ['truth', 'clean']
+                },
+                {
+                    text: "珍珍在客廳看電視，電視裡的人吵起架來。珍珍對著電視大聲說要互相禮貌相處。媽媽聽到了讚美她，珍珍高興地把電視關掉，去幫忙收拾玩具。",
+                    prompt: "請問珍珍受到讚美後，最後做了什麼事？",
+                    targets: ['toy']
+                },
+                {
+                    text: "森林舉辦運動會，小白兔得到第一名後變得非常驕傲，天天在樹下睡覺不練習。第二次比賽時，小白兔落在了最後面，他難過地哭起來。",
+                    prompt: "請問小白兔因為表現驕傲，最後得到了什麼結果？",
+                    targets: ['rabbit']
+                },
+                {
+                    text: "小鬧鐘每天早上準時響起，提醒我不要貪睡。自從有了小鬧鐘，我每天都能按時起床，先去飯前洗手吃早餐，再準時去學校上學。",
+                    prompt: "請問有了小鬧鐘後，作者養成了哪些好習慣？",
+                    targets: ['clock', 'wash', 'school']
+                },
+                {
+                    text: "今天是學校的大掃除時間，老師分配大家工作。有的同學擦窗戶，有的擦桌椅，我負責拿掃把打掃教室，大家同心協力完成清潔。",
+                    prompt: "請問作者在大掃除時，負責進行什麼工作？",
+                    targets: ['clean']
+                },
+                {
+                    text: "淘氣的小麻雀飛到池塘邊，用腳踢了青蛙一下。青蛙嚇得掉進水裡。麻雀知道自己做錯事了，趕快向青蛙誠實認錯，並說對不起。",
+                    prompt: "請問小麻雀發現自己淘氣做錯事後，做了什麼反應？",
+                    targets: ['truth', 'polite']
+                },
+                {
+                    text: "上課鐘聲響了，小華連忙把椅子靠攏，並回到座位上坐好休息。當老師問問題時，他先舉手發言，並專心聽老師說話。",
+                    prompt: "請問小華在上課鐘響後，做到哪些優秀表現？",
+                    targets: ['chair', 'sit', 'hand', 'listen']
+                },
+                {
+                    text: "小強今天去公園散步，看到有小狗在草地上跑。他沒有去打擾小狗，而是拿出水壺多喝水，並去旁邊安靜等待媽媽接他回家。",
+                    prompt: "請問小強在公園裡真正做了什麼事？",
+                    targets: ['park', 'water', 'wait']
+                }
+            ];
+
+            for (let i = 0; i < 100; i++) {
+                const story = level5Stories[i % level5Stories.length];
+                bank["30-50"].push({
+                    text: story.text,
+                    questionPrompt: story.prompt,
+                    targetIds: story.targets,
+                    multi: true
+                });
+            }
+
+            // MATH LEVEL
+            const mathTemplates = [
+                { a: 283, op: '加上', b: 197, ans: 480, ask: 'ans', prompt: '請問：剛剛報讀的【答案】是多少？', distractors: [470, 380, 490, 580] },
+                { a: 581, op: '乘以', b: 3, ans: 1743, ask: 'b', prompt: '請問：剛剛 581 是【乘以幾】？', distractors: [2, 4, 5, 6] },
+                { a: 650, op: '減去', b: 120, ans: 530, ask: 'ans', prompt: '請問：剛剛計算完的【答案】是多少？', distractors: [520, 430, 540, 630] }
+            ];
+
+            for (let i = 0; i < 100; i++) {
+                const item = mathTemplates[i % mathTemplates.length];
+                const shift = Math.floor(i / mathTemplates.length) * 5;
+                const a = item.a + shift;
+                const b = item.b;
+                let ans = item.ans;
+                if (item.op === '加上') ans = a + b;
+                if (item.op === '減去') ans = a - b;
+                if (item.op === '乘以') ans = a * b;
+
+                let targetValue = String(item.ask === 'ans' ? ans : b);
+                let optionsList = [targetValue, ...item.distractors.map(d => String(d + shift))].slice(0, 5);
+
+                bank["math"].push({
+                    text: `${a} ${item.op} ${b} 的答案是 ${ans}。`,
+                    questionPrompt: item.prompt,
+                    targetIds: [targetValue],
+                    multi: false,
+                    options: optionsList.map(val => ({ id: val, name: val, isMath: true }))
+                });
+            }
+
+            return bank;
         }
 
-        // 更新畫面歷程
-        currentInput += inputChar;
-        document.getElementById('input-history').innerText = `目前輸入：${currentInput}`;
+        const questionBank = generateQuestionBank();
 
-        // 檢查是否正確
-        checkAnswer();
-    }
+        // STATE & LOGIC
+        let currentLevel = "5";
+        let allowRepeat = true;
+        let timeLimit = 0;
+        let sessionQuestions = [];
+        let currentQuestionIndex = 0;
+        let currentQuestion = null;
+        let selectedOptionIds = [];
+        let score = 0;
+        let speechSynthesis = window.speechSynthesis;
+        let timerInterval = null;
+        let remainingTime = 0;
+        let audioPlayedOnce = false;
 
-    function checkAnswer() {
-        const currentAnswer = currentQuestions[currentIndex];
+        const setupScreen = document.getElementById('setupScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const attentionOverlay = document.getElementById('attentionOverlay');
+        const feedbackModal = document.getElementById('feedbackModal');
+        const summaryModal = document.getElementById('summaryModal');
+        const scoreBadge = document.getElementById('scoreBadge');
+        const currentScoreEl = document.getElementById('currentScore');
+        const currentQNumEl = document.getElementById('currentQNum');
         
-        // 如果輸入的最後幾個字元等於答案，或者完全一致，則過關進入下一題
-        // 這樣可以支援使用者用拼音連續輸入，只要字尾出現正確語詞即算對
-        if (currentInput.endsWith(currentAnswer)) {
+        const levelSelect = document.getElementById('levelSelect');
+        const startBtn = document.getElementById('startBtn');
+        const audioPlayBtn = document.getElementById('audioPlayBtn');
+        const playingStatus = document.getElementById('playingStatus');
+        const timerContainer = document.getElementById('timerContainer');
+        const timerCount = document.getElementById('timerCount');
+        const quitBtn = document.getElementById('quitBtn');
+        
+        const questionTitle = document.getElementById('questionTitle');
+        const targetHint = document.getElementById('targetHint');
+        const optionsContainer = document.getElementById('optionsContainer');
+        const submitContainer = document.getElementById('submitContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const selectedCountEl = document.getElementById('selectedCount');
+
+        const nextBtn = document.getElementById('nextBtn');
+        const retrySessionBtn = document.getElementById('retrySessionBtn');
+        const backSetupBtn = document.getElementById('backSetupBtn');
+
+        startBtn.addEventListener('click', startGame);
+        quitBtn.addEventListener('click', quitGame);
+        audioPlayBtn.addEventListener('click', () => playQuestionAudio(false));
+        submitBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', handleNextClick);
+        retrySessionBtn.addEventListener('click', startGame);
+        backSetupBtn.addEventListener('click', quitGame);
+
+        function speakText(text, onEndCallback) {
+            if (!speechSynthesis) {
+                if (onEndCallback) onEndCallback();
+                return;
+            }
+            speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-TW';
+            utterance.rate = 0.85;
+            playingStatus.classList.remove('hidden');
+
+            utterance.onend = () => {
+                playingStatus.classList.add('hidden');
+                if (onEndCallback) onEndCallback();
+            };
+            utterance.onerror = () => {
+                playingStatus.classList.add('hidden');
+                if (onEndCallback) onEndCallback();
+            };
+            speechSynthesis.speak(utterance);
+        }
+
+        function startGame() {
+            currentLevel = levelSelect.value;
+            allowRepeat = document.querySelector('input[name="repeatOption"]:checked').value === 'allow';
+            timeLimit = parseInt(document.querySelector('input[name="timeOption"]:checked').value);
+
+            const pool = [...questionBank[currentLevel]];
+            pool.sort(() => 0.5 - Math.random());
+            sessionQuestions = pool.slice(0, 10);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            currentScoreEl.innerText = score;
+            scoreBadge.classList.remove('hidden');
+
+            setupScreen.classList.add('hidden');
+            summaryModal.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+
+            loadNextQuestion();
+        }
+
+        function quitGame() {
+            if (speechSynthesis) speechSynthesis.cancel();
+            clearInterval(timerInterval);
+            gameScreen.classList.add('hidden');
+            summaryModal.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            scoreBadge.classList.add('hidden');
+            feedbackModal.classList.add('hidden');
+        }
+
+        function loadNextQuestion() {
+            feedbackModal.classList.add('hidden');
+            clearInterval(timerInterval);
+            selectedOptionIds = [];
+            audioPlayedOnce = false;
+
+            if (currentQuestionIndex >= sessionQuestions.length) {
+                showSummaryModal();
+                return;
+            }
+
+            currentQuestion = sessionQuestions[currentQuestionIndex];
+            currentQNumEl.innerText = currentQuestionIndex + 1;
+
+            questionTitle.innerText = currentQuestion.questionPrompt;
+            targetHint.innerText = currentQuestion.multi ? "（本題可複選，選完請點選「確認答案」）" : "（點選符合的圖片）";
+
+            setupOptionsGrid();
+
+            if (allowRepeat) {
+                audioPlayBtn.classList.remove('hidden', 'opacity-50', 'cursor-not-allowed');
+            } else {
+                audioPlayBtn.classList.add('hidden');
+            }
+
+            showAttentionWarning(() => {
+                playQuestionAudio(true);
+            });
+        }
+
+        function handleNextClick() {
+            currentQuestionIndex++;
+            loadNextQuestion();
+        }
+
+        function showSummaryModal() {
+            gameScreen.classList.add('hidden');
+            document.getElementById('finalScore').innerText = score;
+            const commentEl = document.getElementById('summaryComment');
+            if (score === 100) {
+                commentEl.innerText = "太完美了！耳朵超級專心！";
+            } else if (score >= 70) {
+                commentEl.innerText = "表現很棒！繼續保持好習慣！";
+            } else {
+                commentEl.innerText = "再試一次，眼睛看螢幕，耳朵專心聽！";
+            }
+            summaryModal.classList.remove('hidden');
+            speakText(`完成了！你的得分是 ${score} 分！`);
+        }
+
+        function showAttentionWarning(callback) {
+            attentionOverlay.classList.remove('hidden');
             setTimeout(() => {
-                currentIndex++;
-                currentInput = ''; // 清空輸入歷程，準備下一題
-                updateUI();
-            }, 300); // 稍微延遲 0.3 秒讓使用者看到輸入成功的歷程
+                attentionOverlay.classList.add('hidden');
+                if (callback) callback();
+            }, 1200);
         }
-    }
 
-    function finishGame() {
-        document.getElementById('question-display').innerText = "🎉 恭喜完成本局測驗！";
-        document.getElementById('input-history').innerText = "";
-        document.getElementById('progress-text').innerText = "測驗結束";
-        document.removeEventListener('keydown', handleKeyPress);
-    }
+        function playQuestionAudio(isFirstTime = false) {
+            if (!allowRepeat && audioPlayedOnce && !isFirstTime) return;
+            audioPlayedOnce = true;
+            if (!allowRepeat) {
+                audioPlayBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
 
-    function resetGame() {
-        document.removeEventListener('keydown', handleKeyPress);
-        document.getElementById('game-area').style.display = 'none';
-        document.getElementById('main-menu').style.display = 'block';
-    }
-</script>
+            clearInterval(timerInterval);
+            timerContainer.classList.add('hidden');
 
+            speakText(currentQuestion.text, () => {
+                if (timeLimit > 0) {
+                    startTimer(timeLimit);
+                }
+            });
+        }
+
+        function startTimer(seconds) {
+            remainingTime = seconds;
+            timerCount.innerText = remainingTime;
+            timerContainer.classList.remove('hidden');
+
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                remainingTime--;
+                timerCount.innerText = remainingTime;
+                if (remainingTime <= 0) {
+                    clearInterval(timerInterval);
+                    showFeedback(false, "時間到囉！記得要加快反應速度！");
+                }
+            }, 1000);
+        }
+
+        function setupOptionsGrid() {
+            optionsContainer.innerHTML = "";
+            let options = [];
+
+            if (currentQuestion.options) {
+                options = [...currentQuestion.options];
+                options.sort(() => 0.5 - Math.random());
+            } else {
+                const count = currentQuestion.multi ? 10 : 5;
+                let selectedPool = baseItems.filter(item => currentQuestion.targetIds.includes(item.id));
+                let distractors = baseItems.filter(item => !currentQuestion.targetIds.includes(item.id));
+                distractors.sort(() => 0.5 - Math.random());
+
+                options = [...selectedPool, ...distractors.slice(0, count - selectedPool.length)];
+                options.sort(() => 0.5 - Math.random());
+            }
+
+            options.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `option-card bg-white border-3 border-slate-200 hover:border-emerald-400 rounded-2xl p-3 flex flex-col items-center justify-between cursor-pointer shadow-md transition transform active:scale-95 min-h-[120px]`;
+                card.dataset.id = item.id;
+
+                const iconHtml = item.isMath 
+                    ? `<div class="text-3xl sm:text-4xl font-black text-indigo-700 my-auto bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-200">${item.name}</div>`
+                    : `<div class="my-auto">${getSvgIcon(item.icon)}</div>`;
+
+                card.innerHTML = `
+                    ${iconHtml}
+                    <div class="w-full flex items-center justify-between mt-2 pt-2 border-t border-slate-100">
+                        <span class="font-bold text-slate-800 text-sm sm:text-base">${item.name}</span>
+                        <button class="speaker-btn text-emerald-600 hover:text-emerald-800 p-1 rounded-full hover:bg-emerald-50 transition" title="聽讀音">
+                            <i class="fa-solid fa-volume-low text-base"></i>
+                        </button>
+                    </div>
+                `;
+
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.speaker-btn')) {
+                        e.stopPropagation();
+                        speakText(item.name);
+                        return;
+                    }
+                    toggleOptionSelect(card, item.id);
+                });
+
+                optionsContainer.appendChild(card);
+            });
+
+            if (currentQuestion.multi) {
+                submitContainer.classList.remove('hidden');
+                updateSelectedCount();
+            } else {
+                submitContainer.classList.add('hidden');
+            }
+        }
+
+        function toggleOptionSelect(card, id) {
+            if (currentQuestion.multi) {
+                if (selectedOptionIds.includes(id)) {
+                    selectedOptionIds = selectedOptionIds.filter(i => i !== id);
+                    card.classList.remove('border-emerald-500', 'bg-emerald-50', 'ring-4', 'ring-emerald-200');
+                    card.classList.add('border-slate-200');
+                } else {
+                    selectedOptionIds.push(id);
+                    card.classList.remove('border-slate-200');
+                    card.classList.add('border-emerald-500', 'bg-emerald-50', 'ring-4', 'ring-emerald-200');
+                }
+                updateSelectedCount();
+            } else {
+                selectedOptionIds = [id];
+                checkAnswer();
+            }
+        }
+
+        function updateSelectedCount() {
+            selectedCountEl.innerText = selectedOptionIds.length;
+        }
+
+        function checkAnswer() {
+            clearInterval(timerInterval);
+            const targets = currentQuestion.targetIds;
+            const isCorrect = targets.length === selectedOptionIds.length &&
+                              targets.every(id => selectedOptionIds.includes(id));
+
+            if (isCorrect) {
+                score += 10;
+                currentScoreEl.innerText = score;
+                showFeedback(true, "太棒了！你有專心聽懂指令喔！");
+            } else {
+                showFeedback(false, "沒關係，下次耳朵要聽得更仔細！");
+            }
+        }
+
+        function showFeedback(isSuccess, detailText) {
+            const feedbackCard = document.getElementById('feedbackCard');
+            const feedbackIcon = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackDetail = document.getElementById('feedbackDetail');
+
+            if (isSuccess) {
+                feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-500"></i>`;
+                feedbackTitle.innerText = "答對了！太棒了！";
+                feedbackTitle.className = "text-3xl font-black mb-2 text-emerald-600";
+                speakText("答對了！太棒了！");
+            } else {
+                feedbackIcon.innerHTML = `<i class="fa-solid fa-circle-xmark text-rose-500"></i>`;
+                feedbackTitle.innerText = "差一點點！再加油！";
+                feedbackTitle.className = "text-3xl font-black mb-2 text-rose-600";
+                feedbackCard.classList.add('animate-shake');
+                setTimeout(() => feedbackCard.classList.remove('animate-shake'), 500);
+                speakText("再接再勵！專心聽喔！");
+            }
+
+            feedbackDetail.innerText = detailText;
+            feedbackModal.classList.remove('hidden');
+        }
+    </script>
 </body>
 </html>
