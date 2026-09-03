@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>打字練習系統 (千字完美版 - 支援真實鍵盤)</title>
+    <!-- 設定 Google Drive 圖片為 Favicon -->
+    <link rel="icon" href="https://drive.google.com/uc?export=view&id=1Af2oiYSvUifQfCwN6YEApEhkN1Jg_85K" type="image/png">
     <style>
         :root {
             --bg-color: #f0f4f8;
@@ -37,6 +39,7 @@
         .mode-btn:active { transform: translateY(2px); box-shadow: none; }
         .mode-btn:hover { background: #d1d9e6; }
         .btn-article { background: #d4edda; border: 2px solid #28a745; font-weight: bold; }
+        .btn-adv { background: #ffeeba; border: 2px solid #ffc107; font-weight: bold; }
 
         .header-info { flex: 0 0 auto; display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 16px; font-weight: bold;}
         .btn-small { padding: 6px 12px; border-radius: 6px; border: none; background: #e0e0e0; font-size: 14px; font-weight: bold; cursor: pointer;}
@@ -73,11 +76,11 @@
         .key-tone { background-color: #fff3cd; border: 2px solid var(--tone-color); color: #856404; font-weight: bold;}
         .key-tone .zh { color: #d35400; font-size: 20px;}
         
-        .key.fn-key { font-size: 14px; background: #e2e6ea; }
+        .key.fn-key { font-size: 14px; background: #e2e6ea; transition: 0.2s;}
         .key.backspace { flex: 1.5; background: #ffe6e6; } 
         .key.enter { flex: 1.5; background: #d4edda; font-weight: bold; color: #155724; }
         .key.shift { flex: 2; transition: 0.2s; }
-        .key.shift.active { background: #ffc107; color: black; font-weight: bold; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); transform: translateY(2px); } 
+        .key.shift.active, .key.caps.active { background: #ffc107; color: black; font-weight: bold; box-shadow: inset 0 3px 5px rgba(0,0,0,0.2); transform: translateY(2px); } 
         .key.space { flex: 5; font-size: 18px; }
         .key.wrong-btn { flex: 1.5; background: #f8d7da; color: #721c24; } 
 
@@ -93,10 +96,11 @@
         <div class="home-container">
             <div class="main-title">打字練習系統</div>
             
+            <!-- 真實鍵盤切換選項 -->
             <div class="menu-section" style="background:#fff3cd; border: 1px solid #ffeeba; text-align: center;">
                 <label style="font-size: 18px; font-weight: bold; cursor: pointer; color: #856404; display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <input type="checkbox" id="use-real-kb" style="transform: scale(1.5);">
-                    ☑️ 啟用「真實鍵盤」模式 (需選正確國字過關)
+                    ☑️ 啟用「真實鍵盤」模式 (隱藏畫面鍵盤，提供打字輸入框)
                 </label>
             </div>
 
@@ -117,7 +121,8 @@
 
             <div class="menu-section">
                 <h3>3. 英文打字 (隨機10題)</h3>
-                <button class="mode-btn" onclick="startGame('english', 'all')">開始英文打字</button>
+                <button class="mode-btn" onclick="startGame('english', 'all')">基礎版 (不分大小寫)</button>
+                <button class="mode-btn btn-adv" onclick="startGame('english_adv', 'all')">進階版 (區分大小寫)</button>
             </div>
 
             <div class="menu-section" style="background:#e8f5e9; border: 1px solid #c3e6cb;">
@@ -169,13 +174,18 @@
                     <div id="hint-content-vocab" style="display:none;">
                         💡 <b>提示：</b><br>
                         1. 字下有虛線，方向鍵⬇️選字，選好按enter<br>
-                        2. 聲調要正確 一聲空白鍵
+                        2. 聲調要正確，一聲空白鍵
                     </div>
                     <div id="hint-content-article" style="display:none;">
                         💡 <b>提示：</b><br>
                         1. 輸入法要中文，中英切換按shift<br>
                         2. 逗號<b>按住</b> ctrl + ,(ㄝ)<br>
                         3. 句號<b>先</b> 按 `(~) <b>再</b> 按 ,(ㄝ)
+                    </div>
+                    <div id="hint-content-english-adv" style="display:none;">
+                        💡 <b>提示：</b><br>
+                        1. caps lock 大小寫切換<br>
+                        2. shift 中英切換
                     </div>
                     <button onclick="speakRealKBHint()" style="background:none; border:none; cursor:pointer; font-size: 28px; vertical-align: bottom; margin-left: 10px;" title="語音報讀提示">🔊</button>
                 </div>
@@ -200,41 +210,41 @@
             </div>
             <div class="key-row">
                 <div class="key fn-key" style="flex:0.5">Tab</div>
-                <div class="key" onclick="typeKey('ㄆ', 'Q')"><span class="en">Q</span><span class="zh">ㄆ</span></div>
-                <div class="key" onclick="typeKey('ㄊ', 'W')"><span class="en">W</span><span class="zh">ㄊ</span></div>
-                <div class="key" onclick="typeKey('ㄍ', 'E')"><span class="en">E</span><span class="zh">ㄍ</span></div>
-                <div class="key" onclick="typeKey('ㄐ', 'R')"><span class="en">R</span><span class="zh">ㄐ</span></div>
-                <div class="key" onclick="typeKey('ㄔ', 'T')"><span class="en">T</span><span class="zh">ㄔ</span></div>
-                <div class="key" onclick="typeKey('ㄗ', 'Y')"><span class="en">Y</span><span class="zh">ㄗ</span></div>
-                <div class="key" onclick="typeKey('ㄧ', 'U')"><span class="en">U</span><span class="zh">ㄧ</span></div>
-                <div class="key" onclick="typeKey('ㄛ', 'I')"><span class="en">I</span><span class="zh">ㄛ</span></div>
-                <div class="key" onclick="typeKey('ㄟ', 'O')"><span class="en">O</span><span class="zh">ㄟ</span></div>
-                <div class="key" onclick="typeKey('ㄣ', 'P')"><span class="en">P</span><span class="zh">ㄣ</span></div>
+                <div class="key" onclick="typeKey('ㄆ', 'Q')"><span class="en">q</span><span class="zh">ㄆ</span></div>
+                <div class="key" onclick="typeKey('ㄊ', 'W')"><span class="en">w</span><span class="zh">ㄊ</span></div>
+                <div class="key" onclick="typeKey('ㄍ', 'E')"><span class="en">e</span><span class="zh">ㄍ</span></div>
+                <div class="key" onclick="typeKey('ㄐ', 'R')"><span class="en">r</span><span class="zh">ㄐ</span></div>
+                <div class="key" onclick="typeKey('ㄔ', 'T')"><span class="en">t</span><span class="zh">ㄔ</span></div>
+                <div class="key" onclick="typeKey('ㄗ', 'Y')"><span class="en">y</span><span class="zh">ㄗ</span></div>
+                <div class="key" onclick="typeKey('ㄧ', 'U')"><span class="en">u</span><span class="zh">ㄧ</span></div>
+                <div class="key" onclick="typeKey('ㄛ', 'I')"><span class="en">i</span><span class="zh">ㄛ</span></div>
+                <div class="key" onclick="typeKey('ㄟ', 'O')"><span class="en">o</span><span class="zh">ㄟ</span></div>
+                <div class="key" onclick="typeKey('ㄣ', 'P')"><span class="en">p</span><span class="zh">ㄣ</span></div>
                 <div class="key fn-key" style="flex:0.5">]</div>
             </div>
             <div class="key-row">
-                <div class="key fn-key" style="flex:0.8">Caps</div>
-                <div class="key" onclick="typeKey('ㄇ', 'A')"><span class="en">A</span><span class="zh">ㄇ</span></div>
-                <div class="key" onclick="typeKey('ㄋ', 'S')"><span class="en">S</span><span class="zh">ㄋ</span></div>
-                <div class="key" onclick="typeKey('ㄎ', 'D')"><span class="en">D</span><span class="zh">ㄎ</span></div>
-                <div class="key" onclick="typeKey('ㄑ', 'F')"><span class="en">F</span><span class="zh">ㄑ</span></div>
-                <div class="key" onclick="typeKey('ㄕ', 'G')"><span class="en">G</span><span class="zh">ㄕ</span></div>
-                <div class="key" onclick="typeKey('ㄘ', 'H')"><span class="en">H</span><span class="zh">ㄘ</span></div>
-                <div class="key" onclick="typeKey('ㄨ', 'J')"><span class="en">J</span><span class="zh">ㄨ</span></div>
-                <div class="key" onclick="typeKey('ㄜ', 'K')"><span class="en">K</span><span class="zh">ㄜ</span></div>
-                <div class="key" onclick="typeKey('ㄠ', 'L')"><span class="en">L</span><span class="zh">ㄠ</span></div>
+                <div class="key fn-key caps" id="caps-btn" style="flex:0.8" onclick="toggleCaps()">Caps</div>
+                <div class="key" onclick="typeKey('ㄇ', 'A')"><span class="en">a</span><span class="zh">ㄇ</span></div>
+                <div class="key" onclick="typeKey('ㄋ', 'S')"><span class="en">s</span><span class="zh">ㄋ</span></div>
+                <div class="key" onclick="typeKey('ㄎ', 'D')"><span class="en">d</span><span class="zh">ㄎ</span></div>
+                <div class="key" onclick="typeKey('ㄑ', 'F')"><span class="en">f</span><span class="zh">ㄑ</span></div>
+                <div class="key" onclick="typeKey('ㄕ', 'G')"><span class="en">g</span><span class="zh">ㄕ</span></div>
+                <div class="key" onclick="typeKey('ㄘ', 'H')"><span class="en">h</span><span class="zh">ㄘ</span></div>
+                <div class="key" onclick="typeKey('ㄨ', 'J')"><span class="en">j</span><span class="zh">ㄨ</span></div>
+                <div class="key" onclick="typeKey('ㄜ', 'K')"><span class="en">k</span><span class="zh">ㄜ</span></div>
+                <div class="key" onclick="typeKey('ㄠ', 'L')"><span class="en">l</span><span class="zh">ㄠ</span></div>
                 <div class="key" onclick="typeKey('ㄤ', ';')"><span class="en">;</span><span class="zh">ㄤ</span></div>
                 <div class="key fn-key enter" onclick="checkAnswer()">確認(Enter)</div>
             </div>
             <div class="key-row">
                 <div class="key fn-key shift" id="shift-btn" onclick="toggleShift()">Shift(中/英)</div>
-                <div class="key" onclick="typeKey('ㄈ', 'Z')"><span class="en">Z</span><span class="zh">ㄈ</span></div>
-                <div class="key" onclick="typeKey('ㄌ', 'X')"><span class="en">X</span><span class="zh">ㄌ</span></div>
-                <div class="key" onclick="typeKey('ㄏ', 'C')"><span class="en">C</span><span class="zh">ㄏ</span></div>
-                <div class="key" onclick="typeKey('ㄒ', 'V')"><span class="en">V</span><span class="zh">ㄒ</span></div>
-                <div class="key" onclick="typeKey('ㄖ', 'B')"><span class="en">B</span><span class="zh">ㄖ</span></div>
-                <div class="key" onclick="typeKey('ㄙ', 'N')"><span class="en">N</span><span class="zh">ㄙ</span></div>
-                <div class="key" onclick="typeKey('ㄩ', 'M')"><span class="en">M</span><span class="zh">ㄩ</span></div>
+                <div class="key" onclick="typeKey('ㄈ', 'Z')"><span class="en">z</span><span class="zh">ㄈ</span></div>
+                <div class="key" onclick="typeKey('ㄌ', 'X')"><span class="en">x</span><span class="zh">ㄌ</span></div>
+                <div class="key" onclick="typeKey('ㄏ', 'C')"><span class="en">c</span><span class="zh">ㄏ</span></div>
+                <div class="key" onclick="typeKey('ㄒ', 'V')"><span class="en">v</span><span class="zh">ㄒ</span></div>
+                <div class="key" onclick="typeKey('ㄖ', 'B')"><span class="en">b</span><span class="zh">ㄖ</span></div>
+                <div class="key" onclick="typeKey('ㄙ', 'N')"><span class="en">n</span><span class="zh">ㄙ</span></div>
+                <div class="key" onclick="typeKey('ㄩ', 'M')"><span class="en">m</span><span class="zh">ㄩ</span></div>
                 <div class="key" onclick="typeKey('ㄝ', ',')"><span class="en">,</span><span class="zh">ㄝ</span></div>
                 <div class="key" onclick="typeKey('ㄡ', '.')"><span class="en">.</span><span class="zh">ㄡ</span></div>
                 <div class="key" onclick="typeKey('ㄥ', '/')"><span class="en">/</span><span class="zh">ㄥ</span></div>
@@ -273,6 +283,9 @@
         bopomofoDB.all = [...bopomofoDB.initials, ...bopomofoDB.finals, ...bopomofoDB.tones];
 
         const englishDB = ['apple', 'banana', 'cat', 'dog', 'elephant', 'flower', 'grape', 'house', 'ice', 'juice', 'keyboard', 'lemon', 'mouse', 'notebook', 'orange', 'pencil', 'queen', 'rabbit', 'sun', 'tree'];
+        
+        // 進階英文題庫 (含大小寫)
+        const englishAdvancedDB = [...new Set(['apple', 'Apple', 'banana', 'Banana', 'cat', 'Cat', 'dog', 'Dog', 'elephant', 'Elephant', 'fish', 'Fish', 'giraffe', 'Giraffe', 'horse', 'Horse', 'monkey', 'Monkey', 'rabbit', 'Rabbit', 'tiger', 'Tiger', 'bear', 'Bear', 'bird', 'Bird', 'duck', 'Duck', 'frog', 'Frog', 'lion', 'Lion', 'panda', 'Panda', 'sheep', 'Sheep', 'cow', 'Cow', 'chicken', 'Chicken', 'pencil', 'Pencil', 'book', 'Book', 'eraser', 'Eraser', 'ruler', 'Ruler', 'desk', 'Desk', 'chair', 'Chair', 'school', 'School', 'teacher', 'Teacher', 'student', 'Student', 'classroom', 'Classroom', 'computer', 'Computer', 'keyboard', 'Keyboard', 'window', 'Window', 'door', 'Door', 'bag', 'Bag', 'notebook', 'Notebook', 'paper', 'Paper', 'pen', 'Pen', 'marker', 'Marker', 'crayon', 'Crayon', 'table', 'Table', 'clock', 'Clock', 'phone', 'Phone', 'robot', 'Robot', 'toy', 'Toy', 'ball', 'Ball', 'game', 'Game', 'music', 'Music', 'picture', 'Picture', 'story', 'Story', 'water', 'Water', 'milk', 'Milk', 'juice', 'Juice', 'bread', 'Bread', 'rice', 'Rice', 'egg', 'Egg', 'cake', 'Cake', 'cookie', 'Cookie', 'pizza', 'Pizza', 'noodle', 'Noodle', 'soup', 'Soup', 'cheese', 'Cheese', 'potato', 'Potato', 'tomato', 'Tomato', 'carrot', 'Carrot', 'orange', 'Orange', 'lemon', 'Lemon', 'grape', 'Grape', 'strawberry', 'Strawberry', 'watermelon', 'Watermelon', 'home', 'Home', 'house', 'House', 'room', 'Room', 'kitchen', 'Kitchen', 'bedroom', 'Bedroom', 'bathroom', 'Bathroom', 'garden', 'Garden', 'park', 'Park', 'store', 'Store', 'market', 'Market', 'library', 'Library', 'hospital', 'Hospital', 'restaurant', 'Restaurant', 'bus', 'Bus', 'car', 'Car', 'train', 'Train', 'bike', 'Bike', 'airplane', 'Airplane', 'boat', 'Boat', 'street', 'Street', 'road', 'Road', 'city', 'City', 'country', 'Country', 'beach', 'Beach', 'mountain', 'Mountain', 'river', 'River', 'lake', 'Lake', 'forest', 'Forest', 'happy', 'Happy', 'sad', 'Sad', 'angry', 'Angry', 'excited', 'Excited', 'tired', 'Tired', 'hungry', 'Hungry', 'thirsty', 'Thirsty', 'good', 'Good', 'bad', 'Bad', 'big', 'Big', 'small', 'Small', 'tall', 'Tall', 'short', 'Short', 'fast', 'Fast', 'slow', 'Slow', 'hot', 'Hot', 'cold', 'Cold', 'new', 'New', 'old', 'Old', 'young', 'Young', 'clean', 'Clean', 'dirty', 'Dirty', 'easy', 'Easy', 'hard', 'Hard', 'kind', 'Kind', 'nice', 'Nice', 'funny', 'Funny', 'strong', 'Strong', 'weak', 'Weak', 'quiet', 'Quiet', 'loud', 'Loud', 'open', 'Open', 'close', 'Close', 'run', 'Run', 'walk', 'Walk', 'jump', 'Jump', 'sit', 'Sit', 'stand', 'Stand', 'read', 'Read', 'write', 'Write', 'draw', 'Draw', 'sing', 'Sing', 'dance', 'Dance', 'play', 'Play', 'sleep', 'Sleep', 'eat', 'Eat', 'drink', 'Drink', 'smile', 'Smile', 'help', 'Help', 'thank', 'Thank'])];
 
         const vocabDict = {
             "爸爸":"ㄅ ㄚ ˋ ㄅ ㄚ ˙", "媽媽":"ㄇ ㄚ 空白鍵 ㄇ ㄚ ˙", "哥哥":"ㄍ ㄜ 空白鍵 ㄍ ㄜ ˙", "姊姊":"ㄐ ㄧ ㄝ ˇ ㄐ ㄧ ㄝ ˙", "弟弟":"ㄉ ㄧ ˋ ㄉ ㄧ ˙", "妹妹":"ㄇ ㄟ ˋ ㄇ ㄟ ˙", "爺爺":"ㄧ ㄝ ˊ ㄧ ㄝ ˙", "奶奶":"ㄋ ㄞ ˇ ㄋ ㄞ ˙", "外公":"ㄨ ㄞ ˋ ㄍ ㄨ ㄥ 空白鍵", "外婆":"ㄨ ㄞ ˋ ㄆ ㄛ ˊ", "家人":"ㄐ ㄧ ㄚ 空白鍵 ㄖ ㄣ ˊ", "小孩":"ㄒ ㄧ ㄠ ˇ ㄏ ㄞ ˊ", "大人":"ㄉ ㄚ ˋ ㄖ ㄣ ˊ", "老師":"ㄌ ㄠ ˇ ㄕ 空白鍵", "同學":"ㄊ ㄨ ㄥ ˊ ㄒ ㄩ ㄝ ˊ", "家裡":"ㄐ ㄧ ㄚ 空白鍵 ㄌ ㄧ ˇ", "房間":"ㄈ ㄤ ˊ ㄐ ㄧ ㄢ 空白鍵", "客廳":"ㄎ ㄜ ˋ ㄊ ㄧ ㄥ 空白鍵", "廚房":"ㄔ ㄨ ˊ ㄈ ㄤ ˊ", "廁所":"ㄘ ㄜ ˋ ㄙ ㄨ ㄛ ˇ", "浴室":"ㄩ ˋ ㄕ ˋ", "門":"ㄇ ㄣ ˊ", "窗戶":"ㄔ ㄨ ㄤ 空白鍵 ㄏ ㄨ ˋ", "地板":"ㄉ ㄧ ˋ ㄅ ㄢ ˇ", "牆壁":"ㄑ ㄧ ㄤ ˊ ㄅ ㄧ ˋ", "床":"ㄔ ㄨ ㄤ ˊ", "桌子":"ㄓ ㄨ ㄛ 空白鍵 ㄗ ˙", "椅子":"ㄧ ˇ ㄗ ˙", "沙發":"ㄕ ㄚ 空白鍵 ㄈ ㄚ 空白鍵", "電視":"ㄉ ㄧ ㄢ ˋ ㄕ ˋ", "冰箱":"ㄅ ㄧ ㄥ 空白鍵 ㄒ ㄧ ㄤ 空白鍵", "電燈":"ㄉ ㄧ ㄢ ˋ ㄉ ㄥ 空白鍵", "時鐘":"ㄕ ˊ ㄓ ㄨ ㄥ 空白鍵", "鏡子":"ㄐ ㄧ ㄥ ˋ ㄗ ˙", "被子":"ㄅ ㄟ ˋ ㄗ ˙", "枕頭":"ㄓ ㄣ ˇ ㄊ ㄡ ˊ", "毛巾":"ㄇ ㄠ ˊ ㄐ ㄧ ㄣ 空白鍵", "牙刷":"ㄧ ㄚ ˊ ㄕ ㄨ ㄚ 空白鍵", "牙膏":"ㄧ ㄚ ˊ ㄍ ㄠ 空白鍵", "肥皂":"ㄈ ㄟ ˊ ㄗ ㄠ ˋ", "傘":"ㄙ ㄢ ˇ", "鞋子":"ㄒ ㄧ ㄝ ˊ ㄗ ˙", "襪子":"ㄨ ㄚ ˋ ㄗ ˙", "衣服":"ㄧ 空白鍵 ㄈ ㄨ ˊ", "褲子":"ㄎ ㄨ ˋ ㄗ ˙", "裙子":"ㄑ ㄩ ㄣ ˊ ㄗ ˙", "帽子":"ㄇ ㄠ ˋ ㄗ ˙", "書包":"ㄕ ㄨ 空白鍵 ㄅ ㄠ 空白鍵", "鉛筆":"ㄑ ㄧ ㄢ 空白鍵 ㄅ ㄧ ˇ", "尺":"ㄔ ˇ", "橡皮擦":"ㄒ ㄧ ㄤ ˋ ㄆ ㄧ ˊ ㄘ ㄚ 空白鍵", "蠟筆":"ㄌ ㄚ ˋ ㄅ ㄧ ˇ", "彩色筆":"ㄘ ㄞ ˇ ㄙ ㄜ ˋ ㄅ ㄧ ˇ", "剪刀":"ㄐ ㄧ ㄢ ˇ ㄉ ㄠ 空白鍵", "膠水":"ㄐ ㄧ ㄠ 空白鍵 ㄕ ㄨ ㄟ ˇ", "紙":"ㄓ ˇ", "課本":"ㄎ ㄜ ˋ ㄅ ㄣ ˇ", "作業":"ㄗ ㄨ ㄛ ˋ ㄧ ㄝ ˋ", "學校":"ㄒ ㄩ ㄝ ˊ ㄒ ㄧ ㄠ ˋ", "教室":"ㄐ ㄧ ㄠ ˋ ㄕ ˋ", "操場":"ㄘ ㄠ 空白鍵 ㄔ ㄤ ˇ", "飯":"ㄈ ㄢ ˋ", "麵":"ㄇ ㄧ ㄢ ˋ", "麵包":"ㄇ ㄧ ㄢ ˋ ㄅ ㄠ 空白鍵", "水果":"ㄕ ㄨ ㄟ ˇ ㄍ ㄨ ㄛ ˇ", "蔬菜":"ㄕ ㄨ 空白鍵 ㄘ ㄞ ˋ", "蘋果":"ㄆ ㄧ ㄥ ˊ ㄍ ㄨ ㄛ ˇ", "香蕉":"ㄒ ㄧ ㄤ 空白鍵 ㄐ ㄧ ㄠ 空白鍵", "西瓜":"ㄒ ㄧ 空白鍵 ㄍ ㄨ ㄚ 空白鍵", "牛奶":"ㄋ ㄧ ㄡ ˊ ㄋ ㄞ ˇ", "水":"ㄕ ㄨ ㄟ ˇ", "蛋":"ㄉ ㄢ ˋ", "魚":"ㄩ ˊ", "肉":"ㄖ ㄡ ˋ", "餅乾":"ㄅ ㄧ ㄥ ˇ ㄍ ㄢ 空白鍵", "糖果":"ㄊ ㄤ ˊ ㄍ ㄨ ㄛ ˇ", "湯匙":"ㄊ ㄤ 空白鍵 ㄔ ˊ", "筷子":"ㄎ ㄨ ㄞ ˋ ㄗ ˙", "碗":"ㄨ ㄢ ˇ", "盤子":"ㄆ ㄢ ˊ ㄗ ˙", "杯子":"ㄅ ㄟ 空白鍵 ㄗ ˙", "水壺":"ㄕ ㄨ ㄟ ˇ ㄏ ㄨ ˊ", "頭":"ㄊ ㄡ ˊ", "頭髮":"ㄊ ㄡ ˊ ㄈ ㄚ ˇ", "臉":"ㄌ ㄧ ㄢ ˇ", "眼睛":"ㄧ ㄢ ˇ ㄐ ㄧ ㄥ 空白鍵", "耳朵":"ㄦ ˇ ㄉ ㄨ ㄛ ˙", "鼻子":"ㄅ ㄧ ˊ ㄗ ˙", "嘴巴":"ㄗ ㄨ ㄟ ˇ ㄅ ㄚ ˙", "牙齒":"ㄧ ㄚ ˊ ㄔ ˇ", "手":"ㄕ ㄡ ˇ", "腳":"ㄐ ㄧ ㄠ ˇ", "肚子":"ㄉ ㄨ ˋ ㄗ ˙", "背":"ㄅ ㄟ ˋ", "狗":"ㄍ ㄡ ˇ", "貓":"ㄇ ㄠ 空白鍵", "鳥":"ㄋ ㄧ ㄠ ˇ", "兔子":"ㄊ ㄨ ˋ ㄗ ˙", "太陽":"ㄊ ㄞ ˋ ㄧ ㄤ ˊ", "月亮":"ㄩ ㄝ ˋ ㄌ ㄧ ㄤ ˋ", "星星":"ㄒ ㄧ ㄥ 空白鍵 ㄒ ㄧ ㄥ 空白鍵", "天空":"ㄊ ㄧ ㄢ 空白鍵 ㄎ ㄨ ㄥ 空白鍵", "雲":"ㄩ ㄣ ˊ", "雨":"ㄩ ˇ", "風":"ㄈ ㄥ 空白鍵", "花":"ㄏ ㄨ ㄚ 空白鍵", "草":"ㄘ ㄠ ˇ", "樹":"ㄕ ㄨ ˋ", "葉子":"ㄧ ㄝ ˋ ㄗ ˙", "吃":"ㄔ 空白鍵", "喝":"ㄏ ㄜ 空白鍵", "跑":"ㄆ ㄠ ˇ", "跳":"ㄊ ㄧ ㄠ ˋ", "走":"ㄗ ㄡ ˇ", "坐":"ㄗ ㄨ ㄛ ˋ", "站":"ㄓ ㄢ ˋ", "看":"ㄎ ㄢ ˋ", "聽":"ㄊ ㄧ ㄥ 空白鍵", "說":"ㄕ ㄨ ㄛ 空白鍵", "笑":"ㄒ ㄧ ㄠ ˋ", "哭":"ㄎ ㄨ 空白鍵", "洗":"ㄒ ㄧ ˇ", "刷":"ㄕ ㄨ ㄚ 空白鍵", "拿":"ㄋ ㄚ ˊ", "放":"ㄈ ㄤ ˋ", "開":"ㄎ ㄞ 空白鍵", "關":"ㄍ ㄨ ㄢ 空白鍵", "穿":"ㄔ ㄨ ㄢ 空白鍵", "脫":"ㄊ ㄨ ㄛ 空白鍵", "給":"ㄍ ㄟ ˇ", "找":"ㄓ ㄠ ˇ", "買":"ㄇ ㄞ ˇ", "玩":"ㄨ ㄢ ˊ", "大":"ㄉ ㄚ ˋ", "小":"ㄒ ㄧ ㄠ ˇ", "長":"ㄔ ㄤ ˊ", "短":"ㄉ ㄨ ㄢ ˇ", "高":"ㄍ ㄠ 空白鍵", "低":"ㄉ ㄧ 空白鍵", "多":"ㄉ ㄨ ㄛ 空白鍵", "少":"ㄕ ㄠ ˇ", "熱":"ㄖ ㄜ ˋ", "冷":"ㄌ ㄥ ˇ", "甜":"ㄊ ㄧ ㄢ ˊ", "酸":"ㄙ ㄨ ㄢ 空白鍵", "香":"ㄒ ㄧ ㄤ 空白鍵", "臭":"ㄔ ㄡ ˋ", "好":"ㄏ ㄠ ˇ", "壞":"ㄏ ㄨ ㄞ ˋ", "新":"ㄒ ㄧ ㄣ 空白鍵", "舊":"ㄐ ㄧ ㄡ ˋ", "乾淨":"ㄍ ㄢ 空白鍵 ㄐ ㄧ ㄥ ˋ", "髒":"ㄗ ㄤ 空白鍵", "紅":"ㄏ ㄨ ㄥ ˊ", "黃":"ㄏ ㄨ ㄤ ˊ", "藍":"ㄌ ㄢ ˊ", "綠":"ㄌ ㄩ ˋ", "黑":"ㄏ ㄟ 空白鍵", "白":"ㄅ ㄞ ˊ", "今天":"ㄐ ㄧ ㄣ 空白鍵 ㄊ ㄧ ㄢ 空白鍵", "昨天":"ㄗ ㄨ ㄛ ˊ ㄊ ㄧ ㄢ 空白鍵", "明天":"ㄇ ㄧ ㄥ ˊ ㄊ ㄧ ㄢ 空白鍵", "早上":"ㄗ ㄠ ˇ ㄕ ㄤ ˋ", "中午":"ㄓ ㄨ ㄥ 空白鍵 ㄨ ˇ", "晚上":"ㄨ ㄢ ˇ ㄕ ㄤ ˋ", "上面":"ㄕ ㄤ ˋ ㄇ ㄧ ㄢ ˋ", "下面":"ㄒ ㄧ ㄚ ˋ ㄇ ㄧ ㄢ ˋ", "前面":"ㄑ ㄧ ㄢ ˊ ㄇ ㄧ ㄢ ˋ", "後面":"ㄏ ㄡ ˋ ㄇ ㄧ ㄢ ˋ", "左邊":"ㄗ ㄨ ㄛ ˇ ㄅ ㄧ ㄢ 空白鍵", "右邊":"ㄧ ㄡ ˋ ㄅ ㄧ ㄢ 空白鍵", "裡面":"ㄌ ㄧ ˇ ㄇ ㄧ ㄢ ˋ", "外面":"ㄨ ㄞ ˋ ㄇ ㄧ ㄢ ˋ", "中間":"ㄓ ㄨ ㄥ 空白鍵 ㄐ ㄧ ㄢ 空白鍵", "開心":"ㄎ ㄞ 空白鍵 ㄒ ㄧ ㄣ 空白鍵", "生氣":"ㄕ ㄥ 空白鍵 ㄑ ㄧ ˋ", "難過":"ㄋ ㄢ ˊ ㄍ ㄨ ㄛ ˋ", "害怕":"ㄏ ㄞ ˋ ㄆ ㄚ ˋ", "累":"ㄌ ㄟ ˋ", "痛":"ㄊ ㄨ ㄥ ˋ", "飽":"ㄅ ㄠ ˇ", "餓":"ㄜ ˋ", "渴":"ㄎ ㄜ ˇ", "車":"ㄔ ㄜ 空白鍵", "門口":"ㄇ ㄣ ˊ ㄎ ㄡ ˇ", "樓梯":"ㄌ ㄡ ˊ ㄊ ㄧ 空白鍵", "陽台":"ㄧ ㄤ ˊ ㄊ ㄞ ˊ", "花園":"ㄏ ㄨ ㄚ 空白鍵 ㄩ ㄢ ˊ", "床上":"ㄔ ㄨ ㄤ ˊ ㄕ ㄤ ˋ", "桌上":"ㄓ ㄨ ㄛ 空白鍵 ㄕ ㄤ ˋ", "燈光":"ㄉ ㄥ 空白鍵 ㄍ ㄨ ㄤ 空白鍵", "電話":"ㄉ ㄧ ㄢ ˋ ㄏ ㄨ ㄚ ˋ", "電腦":"ㄉ ㄧ ㄢ ˋ ㄋ ㄠ ˇ", "照片":"ㄓ ㄠ ˋ ㄆ ㄧ ㄢ ˋ", "玩具":"ㄨ ㄢ ˊ ㄐ ㄩ ˋ", "娃娃":"ㄨ ㄚ ˊ ㄨ ㄚ ˙", "球":"ㄑ ㄧ ㄡ ˊ", "積木":"ㄐ ㄧ 空白鍵 ㄇ ㄨ ˋ", "畫畫":"ㄏ ㄨ ㄚ ˋ ㄏ ㄨ ㄚ ˋ", "唱歌":"ㄔ ㄤ ˋ ㄍ ㄜ 空白鍵", "跳舞":"ㄊ ㄧ ㄠ ˋ ㄨ ˇ", "讀書":"ㄉ ㄨ ˊ ㄕ ㄨ 空白鍵", "寫字":"ㄒ ㄧ ㄝ ˇ ㄗ ˋ", "算數":"ㄙ ㄨ ㄢ ˋ ㄕ ㄨ ˋ", "國語":"ㄍ ㄨ ㄛ ˊ ㄩ ˇ", "體育":"ㄊ ㄧ ˇ ㄩ ˋ", "音樂":"ㄧ ㄣ 空白鍵 ㄩ ㄝ ˋ", "美勞":"ㄇ ㄟ ˇ ㄌ ㄠ ˊ", "上學":"ㄕ ㄤ ˋ ㄒ ㄩ ㄝ ˊ", "放學":"ㄈ ㄤ ˋ ㄒ ㄩ ㄝ ˊ", "上課":"ㄕ ㄤ ˋ ㄎ ㄜ ˋ", "下課":"ㄒ ㄧ ㄚ ˋ ㄎ ㄜ ˋ", "午休":"ㄨ ˇ ㄒ ㄧ ㄡ 空白鍵", "打掃":"ㄉ ㄚ ˇ ㄙ ㄠ ˇ", "午安":"ㄨ ˇ ㄢ 空白鍵", "晚安":"ㄨ ㄢ ˇ ㄢ 空白鍵", "謝謝":"ㄒ ㄧ ㄝ ˋ ㄒ ㄧ ㄝ ˙", "不客氣":"ㄅ ㄨ ˊ ㄎ ㄜ ˋ ㄑ ㄧ ˋ", "對不起":"ㄉ ㄨ ㄟ ˋ ㄅ ㄨ ˋ ㄑ ㄧ ˇ", "沒關係":"ㄇ ㄟ ˊ ㄍ ㄨ ㄢ 空白鍵 ㄒ ㄧ ˋ", "再見":"ㄗ ㄞ ˋ ㄐ ㄧ ㄢ ˋ", "請":"ㄑ ㄧ ㄥ ˇ", "幫忙":"ㄅ ㄤ 空白鍵 ㄇ ㄤ ˊ", "吐司":"ㄊ ㄨ ˇ ㄙ 空白鍵", "蛋餅":"ㄉ ㄢ ˋ ㄅ ㄧ ㄥ ˇ", "漢堡":"ㄏ ㄢ ˋ ㄅ ㄠ ˇ", "果汁":"ㄍ ㄨ ㄛ ˇ ㄓ 空白鍵", "豆漿":"ㄉ ㄡ ˋ ㄐ ㄧ ㄤ 空白鍵", "湯":"ㄊ ㄤ 空白鍵", "雞肉":"ㄐ ㄧ 空白鍵 ㄖ ㄡ ˋ", "豬肉":"ㄓ ㄨ 空白鍵 ㄖ ㄡ ˋ", "青菜":"ㄑ ㄧ ㄥ 空白鍵 ㄘ ㄞ ˋ", "玉米":"ㄩ ˋ ㄇ ㄧ ˇ", "葡萄":"ㄆ ㄨ ˊ ㄊ ㄠ ˊ", "草莓":"ㄘ ㄠ ˇ ㄇ ㄟ ˊ", "橘子":"ㄐ ㄩ ˊ ㄗ ˙", "冰淇淋":"ㄅ ㄧ ㄥ 空白鍵 ㄑ ㄧ ˊ ㄌ ㄧ ㄣ ˊ", "蛋糕":"ㄉ ㄢ ˋ ㄍ ㄠ 空白鍵", "點心":"ㄉ ㄧ ㄢ ˇ ㄒ ㄧ ㄣ 空白鍵", "早餐":"ㄗ ㄠ ˇ ㄘ ㄢ 空白鍵", "午餐":"ㄨ ˇ ㄘ ㄢ 空白鍵", "晚餐":"ㄨ ㄢ ˇ ㄘ ㄢ 空白鍵", "洗手":"ㄒ ㄧ ˇ ㄕ ㄡ ˇ", "擦嘴":"ㄘ ㄚ 空白鍵 ㄗ ㄨ ㄟ ˇ", "漱口":"ㄕ ㄨ ˋ ㄎ ㄡ ˇ", "握手":"ㄨ ㄛ ˋ ㄕ ㄡ ˇ", "拍手":"ㄆ ㄞ 空白鍵 ㄕ ㄡ ˇ", "點頭":"ㄉ ㄧ ㄢ ˇ ㄊ ㄡ ˊ", "搖頭":"ㄧ ㄠ ˊ ㄊ ㄡ ˊ", "蹲下":"ㄉ ㄨ ㄣ 空白鍵 ㄒ ㄧ ㄚ ˋ", "爬":"ㄆ ㄚ ˊ", "抱":"ㄅ ㄠ ˋ", "招手":"ㄓ ㄠ 空白鍵 ㄕ ㄡ ˇ", "手指":"ㄕ ㄡ ˇ ㄓ ˇ", "腳趾":"ㄐ ㄧ ㄠ ˇ ㄓ ˇ", "手臂":"ㄕ ㄡ ˇ ㄅ ㄧ ˋ", "大腿":"ㄉ ㄚ ˋ ㄊ ㄨ ㄟ ˇ", "膝蓋":"ㄒ ㄧ 空白鍵 ㄍ ㄞ ˋ", "脖子":"ㄅ ㄛ ˊ ㄗ ˙", "肩膀":"ㄐ ㄧ ㄢ 空白鍵 ㄅ ㄤ ˇ", "指甲":"ㄓ ˇ ㄐ ㄧ ㄚ ˇ", "舌頭":"ㄕ ㄜ ˊ ㄊ ㄡ ˊ", "眉毛":"ㄇ ㄟ ˊ ㄇ ㄠ ˊ", "螞蟻":"ㄇ ㄚ ˇ ㄧ ˇ", "蜜蜂":"ㄇ ㄧ ˋ ㄈ ㄥ 空白鍵", "蝴蝶":"ㄏ ㄨ ˊ ㄉ ㄧ ㄝ ˊ", "烏龜":"ㄨ 空白鍵 ㄍ ㄨ ㄟ 空白鍵", "蛙":"ㄨ ㄚ 空白鍵", "鴨子":"ㄧ ㄚ 空白鍵 ㄗ ˙", "小雞":"ㄒ ㄧ ㄠ ˇ ㄐ ㄧ 空白鍵", "豬":"ㄓ ㄨ 空白鍵", "馬":"ㄇ ㄚ ˇ", "羊":"ㄧ ㄤ ˊ", "泥土":"ㄋ ㄧ ˊ ㄊ ㄨ ˇ", "沙子":"ㄕ ㄚ 空白鍵 ㄗ ˙", "石頭":"ㄕ ˊ ㄊ ㄡ ˊ", "彩虹":"ㄘ ㄞ ˇ ㄏ ㄨ ㄥ ˊ", "下雨":"ㄒ ㄧ ㄚ ˋ ㄩ ˇ", "晴天":"ㄑ ㄧ ㄥ ˊ ㄊ ㄧ ㄢ 空白鍵", "陰天":"ㄧ ㄣ 空白鍵 ㄊ ㄧ ㄢ 空白鍵", "大風":"ㄉ ㄚ ˋ ㄈ ㄥ 空白鍵", "飄雲":"ㄆ ㄧ ㄠ 空白鍵 ㄩ ㄣ ˊ", "樹枝":"ㄕ ㄨ ˋ ㄓ 空白鍵", "快":"ㄎ ㄨ ㄞ ˋ", "慢":"ㄇ ㄢ ˋ", "硬":"ㄧ ㄥ ˋ", "軟":"ㄖ ㄨ ㄢ ˇ", "重":"ㄓ ㄨ ㄥ ˋ", "輕":"ㄑ ㄧ ㄥ 空白鍵", "圓":"ㄩ ㄢ ˊ", "方":"ㄈ ㄤ 空白鍵", "尖":"ㄐ ㄧ ㄢ 空白鍵", "亮":"ㄌ ㄧ ㄤ ˋ", "暗":"ㄢ ˋ", "滿":"ㄇ ㄢ ˇ", "空":"ㄎ ㄨ ㄥ 空白鍵", "遠":"ㄩ ㄢ ˇ", "近":"ㄐ ㄧ ㄣ ˋ", "這裡":"ㄓ ㄜ ˋ ㄌ ㄧ ˇ", "那裡":"ㄋ ㄚ ˋ ㄌ ㄧ ˇ", "哪裡":"ㄋ ㄚ ˇ ㄌ ㄧ ˇ", "現在":"ㄒ ㄧ ㄢ ˋ ㄗ ㄞ ˋ", "等一下":"ㄉ ㄥ ˇ ㄧ ˊ ㄒ ㄧ ㄚ ˋ", "一下子":"ㄧ ˊ ㄒ ㄧ ㄚ ˋ ㄗ ˙", "第一":"ㄉ ㄧ ˋ ㄧ 空白鍵", "最後":"ㄗ ㄨ ㄟ ˋ ㄏ ㄡ ˋ", "一起":"ㄧ ˋ ㄑ ㄧ ˇ", "自己":"ㄗ ˋ ㄐ ㄧ ˇ", "大家都":"ㄉ ㄚ ˋ ㄐ ㄧ ㄚ 空白鍵 ㄉ ㄡ 空白鍵", "一樣":"ㄧ ˊ ㄧ ㄤ ˋ", "不一樣":"ㄅ ㄨ ˋ ㄧ ˊ ㄧ ㄤ ˋ", "好看":"ㄏ ㄠ ˇ ㄎ ㄢ ˋ", "好聽":"ㄏ ㄠ ˇ ㄊ ㄧ ㄥ 空白鍵", "好吃":"ㄏ ㄠ ˇ ㄔ 空白鍵", "好玩":"ㄏ ㄠ ˇ ㄨ ㄢ ˊ", "舒服":"ㄕ ㄨ 空白鍵 ㄈ ㄨ ˊ", "不舒服":"ㄅ ㄨ ˋ ㄕ ㄨ 空白鍵 ㄈ ㄨ ˊ", "精神":"ㄐ ㄧ ㄥ 空白鍵 ㄕ ㄣ ˊ", "睏":"ㄎ ㄨ ㄣ ˋ", "痛痛":"ㄊ ㄨ ㄥ ˋ ㄊ ㄨ ㄥ ˋ", "癢癢":"ㄧ ㄤ ˇ ㄧ ㄤ ˇ", "涼快":"ㄌ ㄧ ㄤ ˊ ㄎ ㄨ ㄞ ˋ", "溫暖":"ㄨ ㄣ 空白鍵 ㄋ ㄨ ㄢ ˇ", "悄悄":"ㄑ ㄧ ㄠ ˇ ㄑ ㄧ ㄠ ˇ", "大聲":"ㄉ ㄚ ˋ ㄕ ㄥ 空白鍵", "小聲":"ㄒ ㄧ ㄠ ˇ ㄕ ㄥ 空白鍵", "慢慢":"ㄇ ㄢ ˋ ㄇ ㄢ ˋ", "快快":"ㄎ ㄨ ㄞ ˋ ㄎ ㄨ ㄞ ˋ", "輕輕":"ㄑ ㄧ ㄥ 空白鍵 ㄑ ㄧ ㄥ 空白鍵", "重重":"ㄓ ㄨ ㄥ ˋ ㄓ ㄨ ㄥ ˋ", "拍":"ㄆ ㄞ 空白鍵", "踢":"ㄊ ㄧ 空白鍵", "丟":"ㄉ ㄧ ㄡ 空白鍵", "撿":"ㄐ ㄧ ㄢ ˇ", "推":"ㄊ ㄨ ㄟ 空白鍵", "拉":"ㄌ ㄚ 空白鍵", "搬":"ㄅ ㄢ 空白鍵", "提":"ㄊ ㄧ ˊ", "搖":"ㄧ ㄠ ˊ", "吹":"ㄔ ㄨ ㄟ 空白鍵", "咬":"ㄧ ㄠ ˇ", "舔":"ㄊ ㄧ ㄢ ˇ", "吞":"ㄊ ㄨ ㄣ 空白鍵",
@@ -298,6 +311,7 @@
             "5": "為了搬家收拾東西，我最近真是忙得昏天黑地，可是每次問你準備得怎樣了？你都好整以暇地說：不急嘛！兩三下就可以弄好了。直到今天，距搬家公司來運東西只剩兩天的時間，你才開始拿紙箱到臥室。",
             "6": "宇宙間美的東西很多，花在其中佔重要的地位。愛美的民族也很多，德國在其中佔重要的地位。四、五十年以前我在德國留學的時候，曾多次對德國人愛花之真切感到吃驚，家家戶戶都在養花。"
         };
+
         const charDict = {
             "戒":"ㄐ ㄧ ㄝ ˋ", "泡":"ㄆ ㄠ ˋ", "她":"ㄊ ㄚ 空白鍵", "定":"ㄉ ㄧ ㄥ ˋ", "一":"ㄧ 空白鍵", "有":"ㄧ ㄡ ˇ", "的":"ㄉ ㄜ ˙", "御":"ㄩ ˋ", "說":"ㄕ ㄨ ㄛ 空白鍵", "暇":"ㄒ ㄧ ㄚ ˊ", "間":"ㄐ ㄧ ㄢ 空白鍵", "穀":"ㄍ ㄨ ˇ", "中":"ㄓ ㄨ ㄥ 空白鍵", "服":"ㄈ ㄨ ˊ", "敢":"ㄍ ㄢ ˇ", "院":"ㄩ ㄢ ˋ", "師":"ㄕ 空白鍵", "朋":"ㄆ ㄥ ˊ", "臥":"ㄨ ㄛ ˋ", "四":"ㄙ ˋ", "熱":"ㄖ ㄜ ˋ", "好":"ㄏ ㄠ ˇ", "清":"ㄑ ㄧ ㄥ 空白鍵", "也":"ㄧ ㄝ ˇ", "次":"ㄘ ˋ", "出":"ㄔ ㄨ 空白鍵", "主":"ㄓ ㄨ ˇ", "兩":"ㄌ ㄧ ㄤ ˇ", "謙":"ㄑ ㄧ ㄢ 空白鍵", "馬":"ㄇ ㄚ ˇ", "物":"ㄨ ˋ", "氣":"ㄑ ㄧ ˋ", "美":"ㄇ ㄟ ˇ", "讓":"ㄖ ㄤ ˋ", "傢":"ㄐ ㄧ ㄚ 空白鍵", "為":"ㄨ ㄟ ˋ", "室":"ㄕ ˋ", "狗":"ㄍ ㄡ ˇ", "頤":"ㄧ ˊ", "陶":"ㄊ ㄠ ˊ", "惡":"ㄜ ˋ", "他":"ㄊ ㄚ 空白鍵", "回":"ㄏ ㄨ ㄟ ˊ", "鬼":"ㄍ ㄨ ㄟ ˇ", "傲":"ㄠ ˋ", "候":"ㄏ ㄡ ˋ", "幾":"ㄐ ㄧ ˇ", "曾":"ㄘ ㄥ ˊ", "不":"ㄅ ㄨ ˋ", "留":"ㄌ ㄧ ㄡ ˊ", "住":"ㄓ ㄨ ˋ", "我":"ㄨ ㄛ ˇ", "了":"ㄌ ㄜ ˙", "兄":"ㄒ ㄧ ㄨ ㄥ 空白鍵", "裡":"ㄌ ㄧ ˇ", "公":"ㄍ ㄨ ㄥ 空白鍵", "機":"ㄐ ㄧ 空白鍵", "現":"ㄒ ㄧ ㄢ ˋ", "運":"ㄩ ㄣ ˋ", "到":"ㄉ ㄠ ˋ", "罐":"ㄍ ㄨ ㄢ ˋ", "始":"ㄕ ˇ", "倉":"ㄘ ㄤ 空白鍵", "皂":"ㄗ ㄠ ˋ", "你":"ㄋ ㄧ ˇ", "朵":"ㄉ ㄨ ㄛ ˇ", "整":"ㄓ ㄥ ˇ", "奚":"ㄒ ㄧ 空白鍵", "才":"ㄘ ㄞ ˊ", "切":"ㄑ ㄧ ㄝ ˋ", "媽":"ㄇ ㄚ 空白鍵", "頑":"ㄨ ㄢ ˊ", "拾":"ㄕ ˊ", "黑":"ㄏ ㄟ 空白鍵", "德":"ㄉ ㄜ ˊ", "魔":"ㄇ ㄛ ˊ", "學":"ㄒ ㄩ ㄝ ˊ", "昏":"ㄏ ㄨ ㄣ 空白鍵", "碰":"ㄆ ㄥ ˋ", "落":"ㄌ ㄨ ㄛ ˋ", "今":"ㄐ ㄧ ㄣ 空白鍵", "只":"ㄓ ˇ", "宙":"ㄓ ㄡ ˋ", "色":"ㄙ ㄜ ˋ", "肥":"ㄈ ㄟ ˊ", "真":"ㄓ ㄣ 空白鍵", "會":"ㄏ ㄨ ㄟ ˋ", "位":"ㄨ ㄟ ˋ", "近":"ㄐ ㄧ ㄣ ˋ", "此":"ㄘ ˇ", "爪":"ㄓ ㄠ ˇ", "雞":"ㄐ ㄧ 空白鍵", "就":"ㄐ ㄧ ㄡ ˋ", "樣":"ㄧ ㄤ ˋ", "其":"ㄑ ㄧ ˊ", "看":"ㄎ ㄢ ˋ", "是":"ㄕ ˋ", "它":"ㄊ ㄚ 空白鍵", "三":"ㄙ ㄢ 空白鍵", "民":"ㄇ ㄧ ㄣ ˊ", "時":"ㄕ ˊ", "在":"ㄗ ㄞ ˋ", "怎":"ㄗ ㄣ ˇ", "五":"ㄨ ˇ", "當":"ㄉ ㄤ 空白鍵", "術":"ㄕ ㄨ ˋ", "被":"ㄅ ㄟ ˋ", "驕":"ㄐ ㄧ ㄠ 空白鍵", "散":"ㄙ ㄢ ˋ", "子":"ㄗ ˙", "養":"ㄧ ㄤ ˇ", "洗":"ㄒ ㄧ ˇ", "起":"ㄑ ㄧ ˇ", "和":"ㄏ ㄜ ˊ", "以":"ㄧ ˇ", "搓":"ㄘ ㄨ ㄛ 空白鍵", "準":"ㄓ ㄨ ㄣ ˇ", "箱":"ㄒ ㄧ ㄤ 空白鍵", "靈":"ㄌ ㄧ ㄥ ˊ", "友":"ㄧ ㄡ ˇ", "可":"ㄎ ㄜ ˇ", "搬":"ㄅ ㄢ 空白鍵", "紙":"ㄓ ˇ", "再":"ㄗ ㄞ ˋ", "多":"ㄉ ㄨ ㄛ 空白鍵", "大":"ㄉ ㄚ ˋ", "隻":"ㄓ 空白鍵", "對":"ㄉ ㄨ ㄟ ˋ", "嗎":"ㄇ ㄚ ˙", "玩":"ㄨ ㄢ ˊ", "下":"ㄒ ㄧ ㄚ ˋ", "從":"ㄘ ㄨ ㄥ ˊ", "得":"ㄉ ㄜ ˊ", "嘛":"ㄇ ㄚ ˙", "還":"ㄏ ㄞ ˊ", "與":"ㄩ ˇ", "幫":"ㄅ ㄤ 空白鍵", "伙":"ㄏ ㄨ ㄛ ˇ", "廚":"ㄔ ㄨ ˊ", "聞":"ㄨ ㄣ ˊ", "死":"ㄙ ˇ", "十":"ㄕ ˊ", "戶":"ㄏ ㄨ ˋ", "走":"ㄗ ㄡ ˇ", "抓":"ㄓ ㄨ ㄚ 空白鍵", "金":"ㄐ ㄧ ㄣ 空白鍵", "很":"ㄏ ㄣ ˇ", "急":"ㄐ ㄧ ˊ", "吃":"ㄔ 空白鍵", "冒":"ㄇ ㄠ ˋ", "香":"ㄒ ㄧ ㄤ 空白鍵", "地":"ㄉ ㄧ ˋ", "忙":"ㄇ ㄤ ˊ", "距":"ㄐ ㄩ ˋ", "最":"ㄗ ㄨ ㄟ ˋ", "這":"ㄓ ㄜ ˋ", "皮":"ㄆ ㄧ ˊ", "條":"ㄊ ㄧ ㄠ ˊ", "驚":"ㄐ ㄧ ㄥ 空白鍵", "東":"ㄉ ㄨ ㄥ 空白鍵", "騰":"ㄊ ㄥ ˊ", "要":"ㄧ ㄠ ˋ", "教":"ㄐ ㄧ ㄠ 空白鍵", "人":"ㄖ ㄣ ˊ", "食":"ㄕ ˊ", "國":"ㄍ ㄨ ㄛ ˊ", "天":"ㄊ ㄧ ㄢ 空白鍵", "都":"ㄉ ㄡ 空白鍵", "匹":"ㄆ ㄧ ˇ", "佔":"ㄓ ㄢ ˋ", "敵":"ㄉ ㄧ ˊ", "族":"ㄗ ㄨ ˊ", "變":"ㄅ ㄧ ㄢ ˋ", "備":"ㄅ ㄟ ˋ", "每":"ㄇ ㄟ ˇ", "花":"ㄏ ㄨ ㄚ 空白鍵", "家":"ㄐ ㄧ ㄚ 空白鍵", "問":"ㄨ ㄣ ˋ", "味":"ㄨ ㄟ ˋ", "重":"ㄓ ㄨ ㄥ ˋ", "小":"ㄒ ㄧ ㄠ ˇ", "開":"ㄎ ㄞ 空白鍵", "水":"ㄕ ㄨ ㄟ ˇ", "貪":"ㄊ ㄢ 空白鍵", "王":"ㄨ ㄤ ˊ", "虛":"ㄒ ㄩ 空白鍵", "司":"ㄙ 空白鍵", "常":"ㄔ ㄤ ˊ", "吧":"ㄅ ㄚ ˙", "請":"ㄑ ㄧ ㄥ ˇ", "貓":"ㄇ ㄠ 空白鍵", "直":"ㄓ ˊ", "面":"ㄇ ㄧ ㄢ ˋ", "舒":"ㄕ ㄨ 空白鍵", "剩":"ㄕ ㄥ ˋ", "之":"ㄓ 空白鍵", "白":"ㄅ ㄞ ˊ", "居":"ㄐ ㄩ 空白鍵", "答":"ㄉ ㄚ ˊ", "弄":"ㄋ ㄨ ㄥ ˋ", "籠":"ㄌ ㄨ ㄥ ˊ", "西":"ㄒ ㄧ 空白鍵", "個":"ㄍ ㄜ ˙", "感":"ㄍ ㄢ ˇ", "愛":"ㄞ ˋ", "年":"ㄋ ㄧ ㄢ ˊ", "覺":"ㄐ ㄩ ㄝ ˊ", "因":"ㄧ ㄣ 空白鍵", "鳥":"ㄋ ㄧ ㄠ ˇ", "心":"ㄒ ㄧ ㄣ 空白鍵", "遊":"ㄧ ㄡ ˊ", "失":"ㄕ 空白鍵", "收":"ㄕ ㄡ 空白鍵", "弟":"ㄉ ㄧ ˋ", "鐵":"ㄊ ㄧ ㄝ ˇ", "母":"ㄇ ㄨ ˇ", "來":"ㄌ ㄞ ˊ", "宇":"ㄩ ˇ", "前":"ㄑ ㄧ ㄢ ˊ", "哇":"ㄨ ㄚ 空白鍵", "快":"ㄎ ㄨ ㄞ ˋ", "拿":"ㄋ ㄚ ˊ", "懷":"ㄏ ㄨ ㄞ ˊ"
         };
@@ -358,13 +372,15 @@
                 document.getElementById('word-display').style.display = 'block';
                 document.getElementById('score-text').style.display = 'block';
                 
-                if(mode === 'english') toggleShift();
+                if(mode === 'english' || mode === 'english_adv') {
+                    if(!isEnglishMode) toggleShift();
+                }
                 
                 currentQuestionIdx = 0; correctCount = 0; wrongCount = 0;
                 
                 if (mode === 'bopomofo') currentQuestions = getRandomQuestions(bopomofoDB[level], maxQuestions);
                 else if (mode === 'vocab') currentQuestions = getRandomQuestions(vocabLevels[level], maxQuestions);
-                else if (mode === 'english') currentQuestions = getRandomQuestions(englishDB, maxQuestions);
+                else if (mode === 'english' || mode === 'english_adv') currentQuestions = getRandomQuestions(englishAdvancedDB, maxQuestions);
                 
                 maxQuestions = currentQuestions.length; 
                 loadNextQuestion();
@@ -378,8 +394,9 @@
                 document.getElementById('real-kb-container').style.display = 'block';
                 
                 // 真實鍵盤提示切換
-                document.getElementById('hint-content-vocab').style.display = (mode === 'vocab' || mode === 'bopomofo') ? 'inline-block' : 'none';
+                document.getElementById('hint-content-vocab').style.display = (mode === 'vocab') ? 'inline-block' : 'none';
                 document.getElementById('hint-content-article').style.display = (mode === 'article') ? 'inline-block' : 'none';
+                document.getElementById('hint-content-english-adv').style.display = (mode === 'english_adv') ? 'inline-block' : 'none';
                 
                 let inputField = document.getElementById('real-kb-input');
                 inputField.value = '';
@@ -414,7 +431,6 @@
 
             let isCorrect = false;
 
-            // 國字/字元需完全等於上方題目才算正確 (完全對應輸入框的內容)
             if (currentMode === 'bopomofo') {
                 if (currentTarget === '空白鍵' && val.includes(' ')) isCorrect = true;
                 else if (val.trim() === currentTarget) isCorrect = true;
@@ -422,6 +438,8 @@
                 if (val.trim() === currentTarget) isCorrect = true;
             } else if (currentMode === 'english') {
                 if (val.trim().toLowerCase() === currentTarget.toLowerCase()) isCorrect = true;
+            } else if (currentMode === 'english_adv') {
+                if (val.trim() === currentTarget) isCorrect = true; // 嚴格區分大小寫
             } else if (currentMode === 'article') {
                 let targetChar = articleText[articleCursor];
                 if (val.includes(targetChar)) {
@@ -445,10 +463,12 @@
         // 語音報讀真實鍵盤提示
         function speakRealKBHint() {
             let text = "";
-            if (currentMode === 'vocab' || currentMode === 'bopomofo') {
+            if (currentMode === 'vocab') {
                 text = "第一，字下有虛線，方向鍵向下選字，選好按enter。第二，聲調要正確，一聲空白鍵。";
             } else if (currentMode === 'article') {
                 text = "第一，輸入法要中文，中英切換按shift。第二，逗號按住ctrl加ㄝ，句號先按波浪符號再按ㄝ。";
+            } else if (currentMode === 'english_adv') {
+                text = "第一，caps lock 大小寫切換。第二，shift 中英切換。";
             }
             if(!text) return;
             window.speechSynthesis.cancel(); 
@@ -461,6 +481,23 @@
         // ==========================================
         // 虛擬鍵盤操作邏輯
         // ==========================================
+        let isCapsLock = false;
+        
+        function toggleCaps() {
+            isCapsLock = !isCapsLock;
+            let btn = document.getElementById('caps-btn');
+            if (isCapsLock) btn.classList.add('active');
+            else btn.classList.remove('active');
+
+            // 切換英文按鍵的大小寫顯示
+            document.querySelectorAll('.key .en').forEach(span => {
+                let char = span.innerText;
+                if (char.length === 1 && char.match(/[a-zA-Z]/)) {
+                    span.innerText = isCapsLock ? char.toUpperCase() : char.toLowerCase();
+                }
+            });
+        }
+
         function toggleShift() {
             isEnglishMode = !isEnglishMode;
             let btn = document.getElementById('shift-btn');
@@ -474,7 +511,16 @@
         }
 
         function typeKey(zhChar, enChar) {
-            let typed = isEnglishMode ? enChar.toLowerCase() : zhChar;
+            let typed = zhChar;
+            if (isEnglishMode) {
+                // 如果是字母，根據 CapsLock 狀態轉換大小寫
+                if (enChar.length === 1 && enChar.match(/[a-zA-Z]/)) {
+                    typed = isCapsLock ? enChar.toUpperCase() : enChar.toLowerCase();
+                } else {
+                    typed = enChar;
+                }
+            }
+            
             inputHistory.push(typed);
             updateHistoryUI();
 
@@ -531,7 +577,8 @@
             let userInput = inputHistory.join(' ').trim();
 
             if (currentMode === 'bopomofo') isCorrect = (userInput === currentTarget);
-            else if (currentMode === 'english') isCorrect = (inputHistory.join('') === currentTarget);
+            else if (currentMode === 'english') isCorrect = (inputHistory.join('').toLowerCase() === currentTarget.toLowerCase());
+            else if (currentMode === 'english_adv') isCorrect = (inputHistory.join('') === currentTarget); // 嚴格區分大小寫
             else if (currentMode === 'vocab') isCorrect = (userInput === vocabDict[currentTarget] || userInput.endsWith(vocabDict[currentTarget]));
 
             if (isCorrect) {
@@ -568,6 +615,7 @@
             document.getElementById('progress-text').innerText = `進度: ${articleCursor}/${articleText.length}`;
             inputHistory = []; updateHistoryUI();
 
+            // 若非標點符號，也非字典內可解析的字元，自動略過
             let targetChar = articleText[articleCursor];
             if(targetChar !== '，' && targetChar !== '。' && !charDict[targetChar]) {
                 articleCursor++;
@@ -593,7 +641,7 @@
                 } return;
             }
             if (targetChar === '。') {
-                if (!isEnglishMode && currentInput.endsWith('` ㄡ')) {
+                if (!isEnglishMode && currentInput.endsWith('` .')) {
                     showFeedback("標點正確！", true);
                     articleCursor++; renderArticle();
                 } return;
@@ -621,7 +669,7 @@
             
             window.speechSynthesis.cancel(); 
             let msg = new SpeechSynthesisUtterance(text);
-            msg.lang = (currentMode === 'english' || isEnglishMode) ? 'en-US' : 'zh-TW';
+            msg.lang = (currentMode === 'english' || currentMode === 'english_adv' || isEnglishMode) ? 'en-US' : 'zh-TW';
             msg.rate = 0.85; 
             window.speechSynthesis.speak(msg);
         }
